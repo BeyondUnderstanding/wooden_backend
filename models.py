@@ -24,6 +24,7 @@ class Game(BaseSchema):
     title: Mapped[str] = mapped_column(String(50))  # Lenght may be greater than 50?
     description: Mapped[str]
     price: Mapped[float]
+    is_deleted: Mapped[Optional[bool]] = mapped_column(default=False)
 
     attributes: Mapped[List["GameAttribute"]] = relationship(back_populates='game')
     books: Mapped[List["Book"]] = relationship(back_populates='game')
