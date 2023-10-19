@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from sqlalchemy import func, String, ForeignKey
+from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.database import Base
@@ -28,6 +28,7 @@ class Game(BaseSchema):
 
     attributes: Mapped[List["GameAttribute"]] = relationship(back_populates='game')
     books: Mapped[List["Book"]] = relationship(back_populates='game')
+    images: Mapped[List["Image"]] = relationship(back_populates='game')
 
 
 class GameAttribute(BaseSchema):
@@ -51,3 +52,11 @@ class Book(BaseSchema):
     is_payed: Mapped[Optional[bool]] = mapped_column(default=False)
     is_refunded: Mapped[Optional[bool]] = mapped_column(default=False)
     is_canceled: Mapped[bool] = mapped_column(default=False)
+
+
+class Image(BaseSchema):
+    game_id: Mapped[int] = mapped_column(ForeignKey(Game.id))
+    game: Mapped[Game] = relationship(back_populates='images')
+
+    link: Mapped[str]
+    priority: Mapped[int] = mapped_column(default=0)

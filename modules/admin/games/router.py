@@ -38,12 +38,9 @@ async def patch(data: GameSchemaUpdate, session: Session = Depends(get_db),
                  auth: JwtAuthorizationCredentials = Security(access_security)):
     game = session.get(Game, data.id)
 
-    if data.title:
-        game.title = data.title
-    if data.description:
-        game.description = data.description
-    if data.price:
-        game.price = data.price
+    for k, v in data.model_dump().items():
+        if v is not None:
+            setattr(game, k, v)
 
     session.add(game)
     session.commit()

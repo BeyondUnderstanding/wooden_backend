@@ -1,6 +1,6 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field
-
+from ..images.schemas import ImageSchema
 
 
 class GameSchema(BaseModel):
@@ -11,6 +11,7 @@ class GameSchema(BaseModel):
 
 class GameSchemaReturn(GameSchema):
     id: int
+    images: List[ImageSchema]
 
 
 class GameSchemaUpdate(BaseModel):
