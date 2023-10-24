@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy import String, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from db.database import Base
 
@@ -25,6 +25,7 @@ class Game(BaseSchema):
     description: Mapped[str]
     price: Mapped[float]
     is_deleted: Mapped[Optional[bool]] = mapped_column(default=False)
+    sales_count: Mapped[Optional[int]] = mapped_column(default=0)
 
     attributes: Mapped[List["GameAttribute"]] = relationship(back_populates='game')
     books: Mapped[List["Book"]] = relationship(back_populates='game')
@@ -52,6 +53,13 @@ class Book(BaseSchema):
     is_payed: Mapped[Optional[bool]] = mapped_column(default=False)
     is_refunded: Mapped[Optional[bool]] = mapped_column(default=False)
     is_canceled: Mapped[bool] = mapped_column(default=False)
+    legal_id: Mapped[str] = mapped_column(String(11))
+
+    @validates('legal_id')
+    def validate_legal_id(self, key, legal_id) -> str:
+        if len(legal_id)<11:
+            raise ValueError('legal_id too short')
+        return legal_id
 
 
 class Image(BaseSchema):
