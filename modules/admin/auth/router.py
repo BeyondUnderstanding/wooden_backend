@@ -48,6 +48,7 @@ async def refresh(credentials: JwtAuthorizationCredentials = Security(refresh_se
 @admin_auth_router.post('/sign_in', tags=['Auth'])
 async def sign_in(data: AuthSchema, session: Session = Depends(get_db)):
     # If Admin objects already exist - throw 404 to hide method
+    # BUG!
     if session.scalars(select(Admin)):
         return HTTPException(status_code=404)
 
