@@ -11,6 +11,7 @@ class GameSchema(BaseModel):
 
 class GameSchemaReturn(GameSchema):
     id: int
+    sales_count: int
     images: List[ImageSchema]
 
 
