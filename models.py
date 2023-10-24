@@ -68,3 +68,4 @@ class Image(BaseSchema):
 
     link: Mapped[str]
     priority: Mapped[int] = mapped_column(default=0)
+# check
