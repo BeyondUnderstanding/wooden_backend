@@ -30,6 +30,7 @@ class Game(BaseSchema):
     attributes: Mapped[List["GameAttribute"]] = relationship(back_populates='game')
     books: Mapped[List["Book"]] = relationship(back_populates='game')
     images: Mapped[List["Image"]] = relationship(back_populates='game')
+    books: Mapped[List["GameToBook"]] = relationship(back_populates='game')
 
 
 class GameAttribute(BaseSchema):
@@ -43,10 +44,18 @@ class GameAttribute(BaseSchema):
     icon: Mapped[Optional[str]]
 
 
+class GameToBook(BaseSchema):
+    game_id: Mapped[int] = mapped_column(ForeignKey(Game.id))
+    book_id: Mapped[int] = mapped_column(ForeignKey('book.id'))
+    game_price_before: Mapped[float]
+    game_price_after: Mapped[float]
+
+    game: Mapped[Game] = relationship(back_populates='books')
+    book: Mapped['Book'] = relationship(back_populates='games')
+
+
 class Book(BaseSchema):
 
-    game_id: Mapped[int] = mapped_column(ForeignKey(Game.id))
-    game: Mapped[Game] = relationship(back_populates='books')
     date: Mapped[datetime]
     client_name: Mapped[str]
     client_phone: Mapped[str]
@@ -54,6 +63,13 @@ class Book(BaseSchema):
     is_refunded: Mapped[Optional[bool]] = mapped_column(default=False)
     is_canceled: Mapped[bool] = mapped_column(default=False)
     legal_id: Mapped[str] = mapped_column(String(11))
+    has_manager: Mapped[Optional[bool]] = mapped_column(default=False)
+    managers_count: Mapped[Optional[int]] = mapped_column(default=0)
+    total_price: Mapped[float]
+
+
+    games: Mapped[List[GameToBook]] = relationship(back_populates='book')
+
 
     @validates('legal_id')
     def validate_legal_id(self, key, legal_id) -> str:
@@ -62,10 +78,10 @@ class Book(BaseSchema):
         return legal_id
 
 
+
 class Image(BaseSchema):
     game_id: Mapped[int] = mapped_column(ForeignKey(Game.id))
     game: Mapped[Game] = relationship(back_populates='images')
 
     link: Mapped[str]
     priority: Mapped[int] = mapped_column(default=0)
-# check
