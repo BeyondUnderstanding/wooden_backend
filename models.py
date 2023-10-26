@@ -21,14 +21,13 @@ class Admin(BaseSchema):
 
 class Game(BaseSchema):
 
-    title: Mapped[str] = mapped_column(String(50))  # Lenght may be greater than 50?
+    title: Mapped[str] = mapped_column(String(50))  # Length may be greater than 50?
     description: Mapped[str]
     price: Mapped[float]
     is_deleted: Mapped[Optional[bool]] = mapped_column(default=False)
     sales_count: Mapped[Optional[int]] = mapped_column(default=0)
 
     attributes: Mapped[List["GameAttribute"]] = relationship(back_populates='game')
-    books: Mapped[List["Book"]] = relationship(back_populates='game')
     images: Mapped[List["Image"]] = relationship(back_populates='game')
     books: Mapped[List["GameToBook"]] = relationship(back_populates='game')
 
@@ -67,16 +66,13 @@ class Book(BaseSchema):
     managers_count: Mapped[Optional[int]] = mapped_column(default=0)
     total_price: Mapped[float]
 
-
     games: Mapped[List[GameToBook]] = relationship(back_populates='book')
 
-
     @validates('legal_id')
-    def validate_legal_id(self, key, legal_id) -> str:
-        if len(legal_id)<11:
+    def validate_legal_id(self, key, legal_id) -> str:  # noqa
+        if len(legal_id) < 11:
             raise ValueError('legal_id too short')
         return legal_id
-
 
 
 class Image(BaseSchema):
