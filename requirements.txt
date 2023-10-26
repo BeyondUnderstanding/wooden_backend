@@ -1,0 +1,14 @@
+aiofiles==23.2.1
+boto3==1.28.71
+fastapi==0.104.0
+fastapi_jwt==0.1.12
+mypy_boto3_s3==1.28.55
+passlib==1.7.4
+pydantic==2.4.2
+python-dotenv==1.0.0
+SQLAlchemy==2.0.22
+alembic
+uvicorn
+psycopg2-binary
+psycopg2
+python-multipart
