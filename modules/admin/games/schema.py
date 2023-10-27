@@ -33,3 +33,7 @@ class GameSchemaWithAttributes(GameSchemaReturn):
 
     class Config:
         from_attributes = True
+
+
+class GameSchemaWithID(GameSchema):
+    id: int
