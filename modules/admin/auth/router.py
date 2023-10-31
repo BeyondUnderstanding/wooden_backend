@@ -49,7 +49,7 @@ async def refresh(credentials: JwtAuthorizationCredentials = Security(refresh_se
 async def sign_in(data: AuthSchema, session: Session = Depends(get_db)):
     # If Admin objects already exist - throw 404 to hide method
     # BUG!
-    if session.scalars(select(Admin)):
+    if session.scalar(select(Admin)):
         return HTTPException(status_code=404)
 
     new_admin = Admin()

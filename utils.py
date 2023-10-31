@@ -13,4 +13,3 @@ def make_s3() -> S3Client:
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
     )
     return s3
-
