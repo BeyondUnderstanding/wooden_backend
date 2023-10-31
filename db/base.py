@@ -1,2 +1,1 @@
-from .database import Base  # noqa
-from models import BaseSchema, Admin, Game, GameAttribute, Book  # noqa
+from models import Base, Admin, Game, GameAttribute, Book  # noqa
