@@ -1,4 +1,4 @@
-aiofiles==23.2.1
+aiofiles
 boto3==1.28.71
 fastapi==0.104.0
 fastapi_jwt==0.1.12
@@ -10,8 +10,9 @@ SQLAlchemy==2.0.22
 alembic~=1.12.1
 uvicorn
 psycopg2-binary
-psycopg2
 python-multipart
 bcrypt
 pydantic[email]
 pandas~=2.1.2
+requests~=2.31.0
+dataclasses-json
