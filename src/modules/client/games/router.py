@@ -2,7 +2,7 @@ import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import select, distinct
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
@@ -44,5 +44,5 @@ async def get_one(id: int, session: Session = Depends(get_db), uuid: str = Depen
 
 @client_games.get('/get_occupied_dates', response_model=List[datetime.datetime])
 async def get_occupied_dates(session: Session = Depends(get_db)):
-    dates = session.scalars(select(OccupiedDateTime.datetime))
+    dates = session.scalars(select(distinct(OccupiedDateTime.datetime)))
     return dates
