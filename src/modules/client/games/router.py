@@ -6,10 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
-from src.models import Game, Basket
+from src.models import Game, Basket, OccupiedDateTime
 
 from src.db.database import get_db
-from .schema import GameSchema, GameSchemaFull
+from .schema import GameSchema, GameSchemaFull, OccupiedDateTimeSchema
 from .utils import populate_adapter, populate_adapter_full
 from ...schema import require_uuid
 
@@ -40,3 +40,9 @@ async def get_one(id: int, session: Session = Depends(get_db), uuid: str = Depen
 
 
     return populate_adapter_full(game, current_basket.start_date, current_basket.end_date)
+
+
+@client_games.get('/get_occupied_dates', response_model=List[datetime.datetime])
+async def get_occupied_dates(session: Session = Depends(get_db)):
+    dates = session.scalars(select(OccupiedDateTime.datetime))
+    return dates

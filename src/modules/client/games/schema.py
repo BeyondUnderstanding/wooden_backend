@@ -1,5 +1,6 @@
 from typing import List
 
+from datetime import datetime
 from pydantic import BaseModel
 
 class GameAttributeSchema(BaseModel):
@@ -26,3 +27,7 @@ class GameSchema(BaseModel):
 class GameSchemaFull(GameSchema):
     attributes: List['GameAttributeSchema']
     description: str
+
+
+class OccupiedDateTimeSchema(BaseModel):
+    datetime: datetime

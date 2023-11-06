@@ -15,7 +15,7 @@ class BasketItemWithShortInfo(BaseModel):
 
 class CreateBooking(BaseModel):
     client_name: str
-    client_phone: str = Field(pattern='^\+995[57]\d{7}$')
+    client_phone: str = Field(pattern='^\+995[57]\d{8}$')
     client_email: EmailStr
     legal_id: str = Field(min_length=11, max_length=11, pattern="^\\d+$", )
 

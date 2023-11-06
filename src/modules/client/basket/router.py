@@ -47,12 +47,18 @@ async def get_items(session: Session = Depends(get_db), uuid: str = Depends(requ
 
 @basket.post('', response_model=CreateObjectSchema)
 async def add_item(data: AddToBasketSchema, session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
-    # todo: add time collisions check [no]
     check_basket_exist(uuid, session)
     game = session.get(Game, data.id)
     basket_obj = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
     if not game:
-        raise HTTPException(status_code=400, detail="Id is not exist")
+        raise HTTPException(status_code=400, detail="Game not found")
+    if session.scalar(select(BasketItem).where(
+        and_(
+            Basket.id == basket_obj.id,
+            BasketItem.game_id == game.id
+        )
+    )):
+       raise HTTPException(status_code=400, detail='Game already in basket')
 
     new_bi = BasketItem(basket_id=basket_obj.id,  # noqa
                         game_id=game.id)  # noqa
@@ -157,8 +163,8 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
                     datetime=date
                 )
             )
-    # session.add_all(occupied_objs)
-    # session.commit()
+    session.add_all(occupied_objs)
+    session.commit()
     order_items = [
         OrderItem.from_dict(
             {'price': g.game_price_after,
