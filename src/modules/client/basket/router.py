@@ -47,7 +47,7 @@ async def get_items(session: Session = Depends(get_db), uuid: str = Depends(requ
 
 @basket.post('', response_model=CreateObjectSchema)
 async def add_item(data: AddToBasketSchema, session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
-    # todo: add time collisions check
+    # todo: add time collisions check [no]
     check_basket_exist(uuid, session)
     game = session.get(Game, data.id)
     basket_obj = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
