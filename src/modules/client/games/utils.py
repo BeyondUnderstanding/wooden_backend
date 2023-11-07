@@ -1,22 +1,23 @@
+from modules.client.basket.utils import calculate_delta
 from src.models import Game
 
 
 def populate_adapter(obj: Game, start_date, end_date):
-    return {
-        'id': obj.id,
-        'title': obj.title,
-        'price': obj.price,
-        'is_available': obj.check_available(start_date, end_date),
+    delta = calculate_delta(start_date, end_date)
+    a =  {
+        **obj.__dict__,
+        'is_available': obj.check_available(delta),
         'images': obj.images
     }
+    print(a)
+    return a
 
 def populate_adapter_full(obj: Game, start_date, end_date):
-    return {
-        'id': obj.id,
-        'title': obj.title,
-        'description': obj.description,
-        'price': obj.price,
-        'attributes': obj.attributes,
-        'is_available': obj.check_available(start_date, end_date),
+    delta = calculate_delta(start_date, end_date)
+    a = {
+        **obj.__dict__,
+        'is_available': obj.check_available(delta),
         'images': obj.images
     }
+    print(a)
+    return a

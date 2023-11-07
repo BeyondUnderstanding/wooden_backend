@@ -12,6 +12,8 @@ def calculate_hours(b: Basket):
 
 
 def calculate_delta(start_date, end_date):
+    if not start_date or not end_date:
+        return []
     time_range = date_range(start_date, end_date, freq='H')
     return [datetime.datetime.strptime(str(x).replace('+00:00', ''), '%Y-%m-%d %H:%M:%S') for x in time_range]
 

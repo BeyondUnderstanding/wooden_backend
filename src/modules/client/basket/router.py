@@ -1,6 +1,6 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, func
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
@@ -38,9 +38,7 @@ async def get_items(session: Session = Depends(get_db), uuid: str = Depends(requ
     basket_info = session.scalar(select(Basket).where(
         Basket.user_uuid == uuid
     ))
-    items = session.scalars(select(BasketItem).where(
-        Basket.user_uuid == uuid
-    ))
+    items = basket_info.items
     populate = [populate_adapter(obj.game, basket_info.start_date, basket_info.end_date) for obj in items]
     return populate
 
@@ -54,10 +52,10 @@ async def add_item(data: AddToBasketSchema, session: Session = Depends(get_db), 
         raise HTTPException(status_code=400, detail="Game not found")
     if session.scalar(select(BasketItem).where(
         and_(
-            Basket.id == basket_obj.id,
+            Basket.user_uuid == uuid,
             BasketItem.game_id == game.id
         )
-    )):
+    ).join(Basket)):
        raise HTTPException(status_code=400, detail='Game already in basket')
 
     new_bi = BasketItem(basket_id=basket_obj.id,  # noqa
@@ -107,14 +105,29 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         raise HTTPException(status_code=400, detail='Basket empty')
 
     occupied_datetimes = calculate_delta(basket_obj.start_date, basket_obj.end_date)
-    for obj in basket_items:
-        if session.scalar(select(OccupiedDateTime).where(
+    # for obj in basket_items:
+    #     if session.scalar(select(OccupiedDateTime).where(
+    #         and_(
+    #             OccupiedDateTime.datetime.in_(occupied_datetimes),
+    #             OccupiedDateTime.game_id == obj.game_id
+    #         )
+    #     ).limit(1)):
+    #         raise HTTPException(status_code=400, detail=f'Game {obj.game_id} unavailable for booking')
+    #
+    game_ids = [obj.game_id for obj in basket_items]
+    years = set(d.year for d in occupied_datetimes)
+    months = set(d.month for d in occupied_datetimes)
+    days = set(d.day for d in occupied_datetimes)
+
+    if g_id_list := session.scalar(select(OccupiedDateTime.game_id).where(
             and_(
-                OccupiedDateTime.datetime.in_(occupied_datetimes),
-                OccupiedDateTime.game_id == obj.game_id
-            )
+                OccupiedDateTime.game_id.in_(game_ids),
+                func.extract('year', OccupiedDateTime.datetime).in_(years),
+                func.extract('month', OccupiedDateTime.datetime).in_(months),
+                func.extract('day', OccupiedDateTime.datetime).in_(days)
+                 )
         ).limit(1)):
-            raise HTTPException(status_code=400, detail=f'Game {obj.game_id} unavailable for booking')
+        raise HTTPException(status_code=400, detail=f'Games {game_ids} unavailable for booking')
 
     discount, managers, bonus_game = calculate_order(basket_items, basket_obj)
     games = session.scalars(select(Game).where(

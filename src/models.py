@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import String, ForeignKey, select, and_
+from sqlalchemy import String, ForeignKey, select, and_, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, declared_attr, DeclarativeBase
 
 
@@ -34,17 +34,25 @@ class Game(Base):
     as_bonus: Mapped[List['Book']] = relationship(back_populates='bonus_game')
     occupied_dates: Mapped[List['OccupiedDateTime']] = relationship(back_populates='game')
 
-    def check_available(self, start_date, end_date):
-        if not start_date or not end_date:
+    def check_available(self, delta: List[datetime]):
+        if not delta:
             return True
         from src.db.database import get_db
-        from src.modules.client.basket.utils import calculate_delta
-        delta = calculate_delta(start_date, end_date)
+
+        # Very bad! In current logic order must be from same year-month-day,
+        # but i think(impressive!), its universal solution
+
+        years = set(d.year for d in delta)
+        months = set(d.month for d in delta)
+        days = set(d.day for d in delta)
+
         session = next(get_db())
         availability = session.scalar(select(OccupiedDateTime).where(
             and_(
                 OccupiedDateTime.game_id == self.id,
-                OccupiedDateTime.datetime.in_(delta)
+                func.extract('year', OccupiedDateTime.datetime).in_(years),
+                func.extract('month', OccupiedDateTime.datetime).in_(months),
+                func.extract('day', OccupiedDateTime.datetime).in_(days)
                  )
         ).limit(1))
 
