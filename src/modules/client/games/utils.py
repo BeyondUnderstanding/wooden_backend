@@ -1,4 +1,4 @@
-from modules.client.basket.utils import calculate_delta
+from src.modules.client.basket.utils import calculate_delta
 from src.models import Game
 
 
