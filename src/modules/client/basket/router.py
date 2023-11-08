@@ -178,14 +178,14 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
             )
     session.add_all(occupied_objs)
     session.commit()
-    order_items = [
-        OrderItem.from_dict(
-            {'price': g.game_price_after,
-             'quantity': total_hours,
-             'title': g.game.title,
-             'description': g.game.description}
-        ) for g in gamestobook
-    ]
+    # order_items = [
+    #     OrderItem.from_dict(
+    #         {'price': g.game_price_after,
+    #          'quantity': total_hours,
+    #          'title': g.game.title,
+    #          'description': g.game.description}
+    #     ) for g in gamestobook
+    # ]
 
     # unipay_data = unipay.create_order(book.id, uuid, book.total_price, 'Book at WoodenGames.ge', '', order_items)
     # if unipay_data.errorcode == APIError.OK:
