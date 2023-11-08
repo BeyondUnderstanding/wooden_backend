@@ -119,14 +119,15 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     months = set(d.month for d in occupied_datetimes)
     days = set(d.day for d in occupied_datetimes)
 
-    if g_id_list := session.scalars(select(OccupiedDateTime.game_id.distinct()).where(
+    g_id_list = session.scalars(select(OccupiedDateTime.game_id.distinct()).where(
             and_(
                 OccupiedDateTime.game_id.in_(game_ids),
                 func.extract('year', OccupiedDateTime.datetime).in_(years),
                 func.extract('month', OccupiedDateTime.datetime).in_(months),
                 func.extract('day', OccupiedDateTime.datetime).in_(days)
                  )
-        )):
+        )).all()
+    if g_id_list:
         raise HTTPException(status_code=400, detail=f'Games {[g for g in g_id_list]} unavailable for booking')
 
     discount, managers, bonus_game = calculate_order(basket_items, basket_obj)
