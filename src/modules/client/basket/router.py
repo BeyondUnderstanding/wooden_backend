@@ -178,6 +178,9 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
                 )
             )
     session.add_all(occupied_objs)
+    for b_obj in basket_items:
+        session.delete(b_obj)
+
     session.commit()
     # order_items = [
     #     OrderItem.from_dict(
