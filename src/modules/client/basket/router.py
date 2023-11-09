@@ -81,6 +81,7 @@ async def delete_item(id: int, session: Session = Depends(get_db), uuid: str = D
 
 @basket.patch('', response_model=UpdateObjectSchema)
 async def update_basket(data: UpdateBasketDates, session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
+    check_basket_exist(uuid, session)
     basket_obj = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
     basket_obj.start_date = data.start_date
     basket_obj.end_date = data.end_date
@@ -182,6 +183,10 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         session.delete(b_obj)
 
     session.commit()
+    ####################
+    #   Payments part
+    ####################
+
     # order_items = [
     #     OrderItem.from_dict(
     #         {'price': g.game_price_after,
@@ -190,7 +195,6 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     #          'description': g.game.description}
     #     ) for g in gamestobook
     # ]
-
     # unipay_data = unipay.create_order(book.id, uuid, book.total_price, 'Book at WoodenGames.ge', '', order_items)
     # if unipay_data.errorcode == APIError.OK:
     return CreateOrderOK(checkout_url="https://google.com")

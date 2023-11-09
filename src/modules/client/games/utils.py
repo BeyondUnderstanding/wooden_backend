@@ -9,7 +9,6 @@ def populate_adapter(obj: Game, start_date, end_date):
         'is_available': obj.check_available(delta),
         'images': obj.images
     }
-    print(a)
     return a
 
 def populate_adapter_full(obj: Game, start_date, end_date):
@@ -19,5 +18,4 @@ def populate_adapter_full(obj: Game, start_date, end_date):
         'is_available': obj.check_available(delta),
         'images': obj.images
     }
-    print(a)
     return a
