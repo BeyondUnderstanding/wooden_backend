@@ -106,14 +106,6 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         raise HTTPException(status_code=400, detail='Basket empty')
 
     occupied_datetimes = calculate_delta(basket_obj.start_date, basket_obj.end_date)
-    # for obj in basket_items:
-    #     if session.scalar(select(OccupiedDateTime).where(
-    #         and_(
-    #             OccupiedDateTime.datetime.in_(occupied_datetimes),
-    #             OccupiedDateTime.game_id == obj.game_id
-    #         )
-    #     ).limit(1)):
-    #         raise HTTPException(status_code=400, detail=f'Game {obj.game_id} unavailable for booking')
     #
     game_ids = [obj.game_id for obj in basket_items]
     years = set(d.year for d in occupied_datetimes)
