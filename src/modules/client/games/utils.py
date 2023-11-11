@@ -16,6 +16,7 @@ def populate_adapter_full(obj: Game, start_date, end_date):
     a = {
         **obj.__dict__,
         'is_available': obj.check_available(delta),
-        'images': obj.images
+        'images': obj.images,
+        'attributes': obj.attributes
     }
     return a
