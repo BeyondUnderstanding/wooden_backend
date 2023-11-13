@@ -21,6 +21,12 @@ def test_get_products_list():
     assert resp.status_code == 200
     assert resp.json()
 
+def test_get_one_product():
+    resp = client.get('/v1/client/games/get', params={'id': 1}, headers={'x-uuid': user_uuid})
+    assert resp.status_code == 200
+    keys = ('id', 'title', 'price', 'is_available', 'images', 'attributes')
+    for key in keys:
+        assert key in resp.json()
 
 def test_add_to_basket():
     r1 = client.post('/v1/client/basket', json={'id': 1}, headers={'x-uuid': user_uuid})

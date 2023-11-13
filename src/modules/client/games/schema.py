@@ -7,7 +7,6 @@ class GameAttributeSchema(BaseModel):
     name: str
     value: str
     is_main: bool
-    icon: str
 
 class GameImage(BaseModel):
     link: str
