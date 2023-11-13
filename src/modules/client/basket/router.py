@@ -70,7 +70,7 @@ async def delete_item(id: int, session: Session = Depends(get_db), uuid: str = D
     check_basket_exist(uuid, session)
     bi_obj = session.scalar(select(BasketItem).where(
         and_(BasketItem.game_id == id, Basket.user_uuid == uuid)
-    ))
+    ).join(Basket))
     if not bi_obj:
         raise HTTPException(status_code=400, detail='Not found')
 

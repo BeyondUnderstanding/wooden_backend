@@ -66,7 +66,6 @@ class GameAttribute(Base):
     name: Mapped[str]
     value: Mapped[str]
     is_main: Mapped[Optional[bool]] = mapped_column(default=False)
-    icon: Mapped[Optional[str]]
 
 
 class GameToBook(Base):
