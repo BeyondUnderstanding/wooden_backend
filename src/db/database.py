@@ -5,8 +5,13 @@ from src.config import DB_BASE, DB_USER, DB_SERVER, DB_PASSWORD
 # SQLALCHEMY_DATABASE_URL = "sqlite:///./sql_app.db"
 SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_SERVER}/{DB_BASE}"
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, pool_size=10, max_overflow=20
+engine = create_engine(SQLALCHEMY_DATABASE_URL,
+                        pool_size=10,
+                        max_overflow=2,
+                        pool_recycle=300,
+                        pool_pre_ping=True,
+                        pool_use_lifo=True,
+                        echo_pool=True
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
