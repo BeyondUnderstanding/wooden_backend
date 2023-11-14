@@ -17,9 +17,8 @@ app.include_router(main_router)
 
 @app.middleware('http')
 async def pool_monitoring(request: Request, call_next):
-    try:
-        print(engine.pool.status())
-    except Exception as e:
-        print(e)
+    print('----------------------------------')
     response = await call_next(request)
+    print(engine.pool.status())
+    print('----------------------------------')
     return response
