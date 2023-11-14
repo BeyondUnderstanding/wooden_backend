@@ -28,8 +28,11 @@ unipay = UniPayClient(
 
 def check_basket_exist(uuid: str, session: Session):
     if not session.scalar(select(Basket).where(Basket.user_uuid == uuid)):
-        session.add(Basket(user_uuid=uuid))  # noqa
-        session.commit()
+        try:
+            session.add(Basket(user_uuid=uuid))  # noqa
+            session.commit()
+        except:
+            session.rollback()
 
 
 @basket.get('', response_model=List[GameSchema])
@@ -57,12 +60,14 @@ async def add_item(data: AddToBasketSchema, session: Session = Depends(get_db), 
         )
     ).join(Basket)):
        raise HTTPException(status_code=400, detail='Game already in basket')
-
-    new_bi = BasketItem(basket_id=basket_obj.id,  # noqa
-                        game_id=game.id)  # noqa
-    session.add(new_bi)
-    session.commit()
-    return CreateObjectSchema(id=new_bi.id)
+    try:
+        new_bi = BasketItem(basket_id=basket_obj.id,  # noqa
+                            game_id=game.id)  # noqa
+        session.add(new_bi)
+        session.commit()
+        return CreateObjectSchema(id=new_bi.id)
+    except:
+        session.rollback()
 
 
 @basket.delete('', response_model=DeletedObjectSchema)
@@ -73,22 +78,26 @@ async def delete_item(id: int, session: Session = Depends(get_db), uuid: str = D
     ).join(Basket))
     if not bi_obj:
         raise HTTPException(status_code=400, detail='Not found')
-
-    session.delete(bi_obj)
-    session.commit()
-    return DeletedObjectSchema(id=bi_obj.game_id)
+    try:
+        session.delete(bi_obj)
+        session.commit()
+        return DeletedObjectSchema(id=bi_obj.game_id)
+    except:
+        session.rollback()
 
 
 @basket.patch('', response_model=UpdateObjectSchema)
 async def update_basket(data: UpdateBasketDates, session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
-    check_basket_exist(uuid, session)
-    basket_obj = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
-    basket_obj.start_date = data.start_date
-    basket_obj.end_date = data.end_date
-    session.add(basket_obj)
-    session.commit()
-    return UpdateObjectSchema(id=basket_obj.id)
-
+        check_basket_exist(uuid, session)
+        basket_obj = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
+        basket_obj.start_date = data.start_date
+        basket_obj.end_date = data.end_date
+        try:
+            session.add(basket_obj)
+            session.commit()
+            return UpdateObjectSchema(id=basket_obj.id)
+        except:
+            session.rollback()
 
 @basket.post('/create_order', response_model=CreateOrderOK, responses={500: {'model': CreateOrderError}})
 async def create_order(data: CreateBooking, session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
@@ -150,31 +159,44 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         total_price=total
     )
 
-    session.add(book)
-    session.commit()
+    try:
+        session.add(book)
+        session.flush()
+    except:
+        session.rollback()
+        raise HTTPException(status_code=500, detail='Something went wrong')
 
     for g in gamestobook:
         g.book_id = book.id
 
-    session.add_all(gamestobook)
-    session.commit()
+    try:
+        session.add_all(gamestobook)
+        session.flush()
+    except:
+        session.rollback()
+        raise HTTPException(status_code=500, detail='Something went wrong')
 
     occupied_objs = []
-
-    for g in gamestobook:
-        for date in occupied_datetimes:
-            occupied_objs.append(
-                OccupiedDateTime(
-                    game_id=g.game_id,
-                    game_to_book_id=g.id,
-                    datetime=date
+    try:
+        for g in gamestobook:
+            for date in occupied_datetimes:
+                occupied_objs.append(
+                    OccupiedDateTime(
+                        game_id=g.game_id,
+                        game_to_book_id=g.id,
+                        datetime=date
+                    )
                 )
-            )
-    session.add_all(occupied_objs)
-    for b_obj in basket_items:
-        session.delete(b_obj)
+        session.add_all(occupied_objs)
+        for b_obj in basket_items:
+            session.delete(b_obj)
 
-    session.commit()
+        session.commit()
+
+    except:
+        session.rollback()
+        raise HTTPException(status_code=500, detail='Something went wrong')
+
     ####################
     #   Payments part
     ####################
