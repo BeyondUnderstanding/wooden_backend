@@ -16,3 +16,4 @@ pydantic[email]
 pandas~=2.1.2
 requests~=2.31.0
 dataclasses-json
+sentry-sdk[fastapi]
