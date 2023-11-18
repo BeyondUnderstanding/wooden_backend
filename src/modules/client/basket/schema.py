@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field, EmailStr, field_serializer
 from pydantic.types import AwareDatetime
 
 from src.modules.client.games.schema import GameSchema
-from src.payments import APIError
 
 
 class AddToBasketSchema(BaseModel):
@@ -45,13 +44,4 @@ class EmptyBasketException(BaseModel):
 
 class CreateOrderOK(BaseModel):
     checkout_url: str
-
-
-class CreateOrderError(BaseModel):
-    error: APIError
-
-    @field_serializer('error')
-    def serialize_error(self, error: APIError, _info):
-        return error.name
-
 

@@ -9,6 +9,11 @@ class GameSchema(BaseModel):
     price: float
 
 
+class GameSchemaForAdmin(BaseModel):
+    id: int
+    title: str
+
+
 class GameSchemaReturn(GameSchema):
     id: int
     sales_count: int

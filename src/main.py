@@ -4,6 +4,7 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from src.db.database import engine
@@ -43,3 +44,8 @@ async def pool_monitoring(request: Request, call_next):
     print(engine.pool.status())
     print('----------------------------------')
     return response
+
+
+@app.get('/', include_in_schema=False)
+async def redirect_to_docs():
+    return RedirectResponse('/docs')

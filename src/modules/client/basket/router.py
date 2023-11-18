@@ -2,28 +2,23 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, and_, func
 from sqlalchemy.orm import Session
-from starlette.responses import JSONResponse
-
-from src.config import UNIPAY_SECRET, UNIPAY_MERCH_ID
+from src.db.database import get_db
+from src.models import Basket, BasketItem, Game, Book, GameToBook, OccupiedDateTime
 from src.modules.client.basket.schema import AddToBasketSchema, CreateBooking, UpdateBasketDates, \
-    CreateOrderOK, CreateOrderError
+    CreateOrderOK
 from src.modules.client.basket.utils import calculate_order, calculate_hours, calculate_delta
 from src.modules.client.games.schema import GameSchema
 from src.modules.client.games.utils import populate_adapter
-from src.modules.schema import require_uuid, UpdateObjectSchema
-from src.db.database import get_db
 from src.modules.schema import CreateObjectSchema, DeletedObjectSchema
-from src.models import Basket, BasketItem, Game, Book, GameToBook, OccupiedDateTime
-from src.payments import OrderItem, UniPayClient, APIError
+from src.modules.schema import require_uuid, UpdateObjectSchema
+from paymentwall import Paymentwall, Product, Widget
 
 basket = APIRouter(prefix='/basket', tags=['Basket'])
-unipay = UniPayClient(
-    UNIPAY_SECRET,
-    UNIPAY_MERCH_ID,
-    '/v1/payments/success',
-    '/v1/payments/cancel',
-    '/v1/payments/callback'
-)
+
+
+Paymentwall.set_api_type(Paymentwall.API_GOODS)
+Paymentwall.set_app_key('')
+Paymentwall.set_secret_key('')
 
 
 def check_basket_exist(uuid: str, session: Session):
@@ -43,6 +38,7 @@ async def get_items(session: Session = Depends(get_db), uuid: str = Depends(requ
     ))
     items = basket_info.items
     populate = [populate_adapter(obj.game, basket_info.start_date, basket_info.end_date) for obj in items]
+
     return populate
 
 
@@ -54,12 +50,12 @@ async def add_item(data: AddToBasketSchema, session: Session = Depends(get_db), 
     if not game:
         raise HTTPException(status_code=400, detail="Game not found")
     if session.scalar(select(BasketItem).where(
-        and_(
-            Basket.user_uuid == uuid,
-            BasketItem.game_id == game.id
-        )
+            and_(
+                Basket.user_uuid == uuid,
+                BasketItem.game_id == game.id
+            )
     ).join(Basket)):
-       raise HTTPException(status_code=400, detail='Game already in basket')
+        raise HTTPException(status_code=400, detail='Game already in basket')
     try:
         new_bi = BasketItem(basket_id=basket_obj.id,  # noqa
                             game_id=game.id)  # noqa
@@ -88,18 +84,19 @@ async def delete_item(id: int, session: Session = Depends(get_db), uuid: str = D
 
 @basket.patch('', response_model=UpdateObjectSchema)
 async def update_basket(data: UpdateBasketDates, session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
-        check_basket_exist(uuid, session)
-        basket_obj = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
-        basket_obj.start_date = data.start_date
-        basket_obj.end_date = data.end_date
-        try:
-            session.add(basket_obj)
-            session.commit()
-            return UpdateObjectSchema(id=basket_obj.id)
-        except:
-            session.rollback()
+    check_basket_exist(uuid, session)
+    basket_obj = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
+    basket_obj.start_date = data.start_date
+    basket_obj.end_date = data.end_date
+    try:
+        session.add(basket_obj)
+        session.commit()
+        return UpdateObjectSchema(id=basket_obj.id)
+    except:
+        session.rollback()
 
-@basket.post('/create_order', response_model=CreateOrderOK, responses={500: {'model': CreateOrderError}})
+
+@basket.post('/create_order', response_model=CreateOrderOK)
 async def create_order(data: CreateBooking, session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
     basket_obj = session.scalar(select(Basket).where(
         Basket.user_uuid == uuid
@@ -122,13 +119,13 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     days = set(d.day for d in occupied_datetimes)
 
     g_id_list = session.scalars(select(OccupiedDateTime.game_id.distinct()).where(
-            and_(
-                OccupiedDateTime.game_id.in_(game_ids),
-                func.extract('year', OccupiedDateTime.datetime).in_(years),
-                func.extract('month', OccupiedDateTime.datetime).in_(months),
-                func.extract('day', OccupiedDateTime.datetime).in_(days)
-                 )
-        )).all()
+        and_(
+            OccupiedDateTime.game_id.in_(game_ids),
+            func.extract('year', OccupiedDateTime.datetime).in_(years),
+            func.extract('month', OccupiedDateTime.datetime).in_(months),
+            func.extract('day', OccupiedDateTime.datetime).in_(days)
+        )
+    )).all()
     if g_id_list:
         raise HTTPException(status_code=400, detail=f'Games {[g for g in g_id_list]} unavailable for booking')
 
@@ -197,27 +194,15 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         session.rollback()
         raise HTTPException(status_code=500, detail='Something went wrong')
 
-    ####################
-    #   Payments part
-    ####################
-
-    # order_items = [
-    #     OrderItem.from_dict(
-    #         {'price': g.game_price_after,
-    #          'quantity': total_hours,
-    #          'title': g.game.title,
-    #          'description': g.game.description}
-    #     ) for g in gamestobook
-    # ]
-    # unipay_data = unipay.create_order(book.id, uuid, book.total_price, 'Book at WoodenGames.ge', '', order_items)
-    # if unipay_data.errorcode == APIError.OK:
+    # products = [Product(g.id, g.game_price_after, 'GEL', g.game.title)
+    #             for g in gamestobook]
+    # widget = Widget(
+    #     uuid,
+    #     'pw_1',
+    #     products,
+    #     {
+    #         'email': book.client_email,
+    #
+    #     }
+    # )
     return CreateOrderOK(checkout_url="https://google.com")
-    # else:
-    #     content = CreateOrderError(error=unipay_data.errorcode).model_dump()
-    #     print(content)
-    #     return JSONResponse(
-    #         status_code=500,
-    #         content=content
-    #     )
-
-

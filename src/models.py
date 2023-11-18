@@ -94,7 +94,6 @@ class Book(Base):
     total_price: Mapped[float]
     has_bonus_game: Mapped[Optional[bool]] = mapped_column(default=False)
     bonus_game_id: Mapped[Optional[int]] = mapped_column(ForeignKey(Game.id), default=None)
-    test_field: Mapped[bool] = mapped_column(default=False)  # to be deleted
 
     games: Mapped[List[GameToBook]] = relationship(back_populates='book')
     bonus_game: Mapped[Game] = relationship(back_populates='as_bonus')
