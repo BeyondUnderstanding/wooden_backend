@@ -19,7 +19,7 @@ def calculate_delta(start_date, end_date):
 
 
 def calculate_order(bi: List[BasketItem], b: Basket) -> tuple[int, int, bool]:
-    discounts = (100, 85, 70)
+    discounts = (1, 0.85, 0.7)
     # 0%  (100% - 0%)
     # 15% (100% - 15%)
     # 30% (100% - 30%)

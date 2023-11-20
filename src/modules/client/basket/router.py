@@ -12,6 +12,7 @@ from src.modules.client.games.utils import populate_adapter
 from src.modules.schema import CreateObjectSchema, DeletedObjectSchema
 from src.modules.schema import require_uuid, UpdateObjectSchema
 from paymentwall import Paymentwall, Product, Widget
+from math import ceil
 
 basket = APIRouter(prefix='/basket', tags=['Basket'])
 
@@ -138,9 +139,12 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         gamestobook.append(GameToBook(
             game_id=g.id,
             game_price_before=g.price,
-            game_price_after=g.price / 100 * discount
+            game_price_after=g.price * discount
         ))
-    total = round(sum([g.game_price_after for g in gamestobook]) * total_hours, 2)
+
+    # Считаем сумму всех игр и умножаем на кол-во часов.
+    # Округляем в бОльшую сторону, плюс, плюсуем 15 лари за доставку
+    total = ceil(sum([g.game_price_after for g in gamestobook]) * total_hours) + 15
 
     book = Book(
         start_date=basket_obj.start_date,
