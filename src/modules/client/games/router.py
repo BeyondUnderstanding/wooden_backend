@@ -20,7 +20,11 @@ client_games = APIRouter(prefix='/games', tags=['Games'])
                   отдает текущую доступность по дате""")
 async def get_all(session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
     check_basket_exist(uuid, session)
-    games = session.scalars(select(Game).where(Game.is_deleted.is_not(True)).join(Image))
+    games = session.scalars(select(Game).where(Game.is_deleted.is_not(True))
+                            .join(Image)
+                            .order_by(Game.id.asc())
+                            .distinct(Game.id)
+                            )
     current_basket = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
 
     return [populate_adapter(game, current_basket.start_date, current_basket.end_date) for game in games]
