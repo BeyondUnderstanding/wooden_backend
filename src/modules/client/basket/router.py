@@ -140,7 +140,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
             game_price_before=g.price,
             game_price_after=g.price / 100 * discount
         ))
-    total = round(sum([g.game_price_after for g in gamestobook]), 2)
+    total = round(sum([g.game_price_after for g in gamestobook] * total_hours), 2)
 
     book = Book(
         start_date=basket_obj.start_date,
