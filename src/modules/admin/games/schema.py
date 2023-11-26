@@ -3,6 +3,13 @@ from pydantic import BaseModel, Field
 from ..images.schemas import ImageSchema
 
 
+class GameSchemaBasic(BaseModel):
+    id: int
+    title: str
+    price: float
+    is_deleted: bool
+    is_bonus_game: Optional[bool] = Field(default=False)
+
 class GameSchema(BaseModel):
     title: str = Field(max_length=50)
     description: str

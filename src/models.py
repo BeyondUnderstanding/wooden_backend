@@ -130,10 +130,16 @@ class Image(Base):
 
 
 class OccupiedDateTime(Base):
-    game_id: Mapped[int] = mapped_column(ForeignKey(Game.id))
-    game_to_book_id: Mapped[int] = mapped_column(ForeignKey(GameToBook.id))
+    game_id: Mapped[Optional[int]] = mapped_column(ForeignKey(Game.id))
+    game_to_book_id: Mapped[Optional[int]] = mapped_column(ForeignKey(GameToBook.id))
 
     datetime: Mapped[datetime]
 
     game: Mapped[Game] = relationship(back_populates='occupied_dates')
     game_to_book: Mapped[GameToBook] = relationship(back_populates='occupied_dates')
+
+
+class Config(Base):
+    key: Mapped[str]
+    value: Mapped[str]
+

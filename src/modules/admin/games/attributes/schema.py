@@ -6,10 +6,10 @@ from src.modules.admin.games.schema import GameSchema
 
 
 class GameAttributeSchema(BaseModel):
+    id: int
     name: str
     value: str
     is_main: Optional[bool] = Field(default=False)
-    icon: Optional[str] = Field(default=None)
 
 
 class GameAttributeCreateSchema(GameAttributeSchema):
@@ -28,4 +28,3 @@ class GameAttributeOptionalSchema(BaseModel):
     name: Optional[str] = Field(default=None)
     value: Optional[str] = Field(default=None)
     is_main: Optional[bool] = Field(default=None)
-    icon: Optional[str] = Field(default=None)

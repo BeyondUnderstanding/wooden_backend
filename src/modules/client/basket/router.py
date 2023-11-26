@@ -1,3 +1,4 @@
+import datetime
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, and_, func
@@ -11,15 +12,10 @@ from src.modules.client.games.schema import GameSchema
 from src.modules.client.games.utils import populate_adapter
 from src.modules.schema import CreateObjectSchema, DeletedObjectSchema
 from src.modules.schema import require_uuid, UpdateObjectSchema
-from paymentwall import Paymentwall, Product, Widget
 from math import ceil
+from src.modules.admin.mail.generator import send_invoice
 
 basket = APIRouter(prefix='/basket', tags=['Basket'])
-
-
-Paymentwall.set_api_type(Paymentwall.API_GOODS)
-Paymentwall.set_app_key('')
-Paymentwall.set_secret_key('')
 
 
 def check_basket_exist(uuid: str, session: Session):
@@ -177,6 +173,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         session.rollback()
         raise HTTPException(status_code=500, detail='Something went wrong')
 
+    # TODO: Move to bank hook, occupy date only after payment completion
     occupied_objs = []
     try:
         for g in gamestobook:
@@ -197,16 +194,28 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     except:
         session.rollback()
         raise HTTPException(status_code=500, detail='Something went wrong')
-
-    # products = [Product(g.id, g.game_price_after, 'GEL', g.game.title)
-    #             for g in gamestobook]
-    # widget = Widget(
-    #     uuid,
-    #     'pw_1',
-    #     products,
-    #     {
-    #         'email': book.client_email,
-    #
-    #     }
-    # )
+    total_discount = ceil(sum([g.game_price_before for g in gamestobook]) * total_hours) - ceil(sum([g.game_price_after for g in gamestobook]) * total_hours)
+    email_data = {
+        'order': {
+            'id': book.id,
+            'date': f'{datetime.datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")} UTC+0',
+            'total': book.total_price
+        },
+        'user': {
+            'id': uuid,
+            'name': book.client_name,
+        },
+        'discount': total_discount,
+        'products': [
+            {
+                'title': o.game.title,
+                'hours': total_hours,
+                'priceperhour': o.game_price_after
+            } for o in gamestobook
+        ]
+    }
+    # TODO: Move send_invoice to bank hook, send invoices only after payment completion
+    send_invoice(to=book.client_email,
+                 subject='Booking Invoice',
+                 data=email_data)
     return CreateOrderOK(checkout_url="https://google.com")

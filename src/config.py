@@ -14,5 +14,8 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", None)
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", None)
 AWS_REGION = 'ru-central1'
 
-UNIPAY_SECRET = os.getenv("UNIPAY_SECRET", None)
-UNIPAY_MERCH_ID = os.getenv("UNIPAY_MERCH_ID", None)
+SMTP_SERVER=os.getenv("SMTP_SERVER", None)
+SMTP_USER=os.getenv("SMTP_USER", None)
+SMTP_FROM=os.getenv("SMTP_FROM", None)
+SMTP_PASSWORD=os.getenv("SMTP_PASSWORD", None)
+

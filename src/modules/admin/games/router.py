@@ -6,8 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from src.db.database import get_db
-from src.models import Game
-from .schema import GameSchema, GameSchemaWithAttributes, GameSchemaUpdate
+from src.models import Game, Config
+from .schema import GameSchema, GameSchemaWithAttributes, GameSchemaUpdate, GameSchemaBasic
 from ..auth.router import access_security
 from ...schema import CreateObjectSchema, UpdateObjectSchema, DeletedObjectSchema
 from .attributes.router import attributes_router
@@ -26,12 +26,24 @@ async def create(data: GameSchema, session: Session = Depends(get_db),
 
     return {'id': new_game.id}
 
+def game_with_is_bonus(obj: Game, bonus_game_id: int):
+    return {
+        **obj.__dict__,
+        'is_bonus_game': obj.id == bonus_game_id
+    }
 
-@games_router.get('', response_model=List[GameSchemaWithAttributes], tags=['Games'])
+@games_router.get('', response_model=List[GameSchemaBasic], tags=['Games'])
 async def get(session: Session = Depends(get_db), auth: JwtAuthorizationCredentials = Security(access_security)):
     games = session.scalars(select(Game).where(Game.is_deleted == False).order_by(Game.id.asc()))  # noqa
-    return games
+    if c:= session.scalar(select(Config).where(Config.key == 'bonus_game')):
+        bonus_game = c.value
+    else:
+        bonus_game = 9999
+    return [game_with_is_bonus(game, int(bonus_game)) for game in games]
 
+@games_router.get('/{game_id}', response_model=GameSchemaWithAttributes, tags=['Games'])
+async def get_by_id(game_id: int, session: Session = Depends(get_db), auth: JwtAuthorizationCredentials = Security(access_security)):
+    return session.get(Game, game_id)
 
 @games_router.patch('', response_model=UpdateObjectSchema, tags=['Games'])
 async def patch(data: GameSchemaUpdate, session: Session = Depends(get_db),
