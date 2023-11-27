@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, Field, EmailStr, field_serializer
 from pydantic.types import AwareDatetime
 
@@ -16,6 +18,8 @@ class CreateBooking(BaseModel):
     client_name: str
     client_phone: str = Field(pattern='^\+995[57]\d{8}$')
     client_email: EmailStr
+    delivery_address: str
+    extra: Optional[str] = Field(default=None)
     legal_id: str = Field(min_length=11, max_length=11, pattern="^\\d+$", )
 
 

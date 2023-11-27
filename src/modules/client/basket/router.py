@@ -143,6 +143,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     total = ceil(sum([g.game_price_after for g in gamestobook]) * total_hours) + 15
 
     book = Book(
+        user_uuid=uuid,
         start_date=basket_obj.start_date,
         end_date=basket_obj.end_date,
         client_name=data.client_name,
@@ -153,7 +154,9 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         managers_count=managers,
         has_bonus_game=bonus_game,
         bonus_game_id=None,
-        total_price=total
+        total_price=total,
+        delivery_address=data.delivery_address,
+        extra=data.extra
     )
 
     try:

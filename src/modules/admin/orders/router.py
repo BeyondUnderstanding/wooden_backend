@@ -1,8 +1,9 @@
+import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, Security
 from fastapi_jwt import JwtAuthorizationCredentials
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
@@ -18,11 +19,16 @@ orders_router.include_router(grid_router)
 
 
 @orders_router.get('/', tags=['Orders'], response_model=List[OrderModel])
-async def get_all(start: int = 0, size: int = 10, payed_only: bool = False,
+async def get_all(start: int = 0, size: int = 10, payed_only: bool = False, active_only: bool = False,
                   session: Session = Depends(get_db), auth: JwtAuthorizationCredentials = Security(access_security)):
     return session.scalars(select(Book)
                            .distinct(Book.id)
-                           .where(Book.is_payed.in_([True] if payed_only else (True, False)))
+                           .where(
+                                and_(
+                                    Book.is_payed.in_([True] if payed_only else (True, False)),
+                                    datetime.datetime.utcnow() < Book.start_date if active_only else 1==1
+                                )
+                            )
                            .join(GameToBook)
                            .join(Game).limit(size).offset(start).order_by(Book.id.desc()))
 
@@ -35,7 +41,8 @@ async def get_one(order_id: int,
 
 @orders_router.delete('/{order_id}/cancel', tags=['Orders'])
 async def cancel_order(order_id: int,
-                       session: Session = Depends(get_db), auth: JwtAuthorizationCredentials = Security(access_security)):
+                       session: Session = Depends(get_db),
+                       auth: JwtAuthorizationCredentials = Security(access_security)):
     order = session.get(Book, order_id)
     order.is_canceled = True
     if order.is_payed:

@@ -80,6 +80,7 @@ class GameToBook(Base):
 
 
 class Book(Base):
+    user_uuid: Mapped[str]
     start_date: Mapped[datetime]
     end_date: Mapped[datetime]
     client_name: Mapped[str]
@@ -94,6 +95,8 @@ class Book(Base):
     total_price: Mapped[float]
     has_bonus_game: Mapped[Optional[bool]] = mapped_column(default=False)
     bonus_game_id: Mapped[Optional[int]] = mapped_column(ForeignKey(Game.id), default=None)
+    delivery_address: Mapped[str]
+    extra: Mapped[Optional[str]]
 
     games: Mapped[List[GameToBook]] = relationship(back_populates='book')
     bonus_game: Mapped[Game] = relationship(back_populates='as_bonus')
