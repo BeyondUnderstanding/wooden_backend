@@ -7,7 +7,7 @@ from src.db.database import get_db
 from src.models import Basket, BasketItem, Game, Book, GameToBook, OccupiedDateTime
 from src.modules.client.basket.schema import AddToBasketSchema, CreateBooking, UpdateBasketDates, \
     CreateOrderOK
-from src.modules.client.basket.utils import calculate_order, calculate_hours, calculate_delta
+from src.modules.client.basket.utils import calculate_order, calculate_hours, calculate_delta, new_order_sms_notification
 from src.modules.client.games.schema import GameSchema
 from src.modules.client.games.utils import populate_adapter
 from src.modules.schema import CreateObjectSchema, DeletedObjectSchema
@@ -156,47 +156,39 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         bonus_game_id=None,
         total_price=total,
         delivery_address=data.delivery_address,
-        extra=data.extra
+        extra=data.extra,
+        payment_method=data.payment_method,
+        is_prepayment=True if data.payment_method == 'prepayment' else False,
+        prepayment_done=False
     )
 
-    try:
-        session.add(book)
-        session.flush()
-    except:
-        session.rollback()
-        raise HTTPException(status_code=500, detail='Something went wrong')
+    session.add(book)
+    session.flush()
 
     for g in gamestobook:
         g.book_id = book.id
 
-    try:
-        session.add_all(gamestobook)
-        session.flush()
-    except:
-        session.rollback()
-        raise HTTPException(status_code=500, detail='Something went wrong')
+    session.add_all(gamestobook)
+    session.flush()
+
 
     # TODO: Move to bank hook, occupy date only after payment completion
     occupied_objs = []
-    try:
-        for g in gamestobook:
-            for date in occupied_datetimes:
-                occupied_objs.append(
-                    OccupiedDateTime(
-                        game_id=g.game_id,
-                        game_to_book_id=g.id,
-                        datetime=date
-                    )
+    for g in gamestobook:
+        for date in occupied_datetimes:
+            occupied_objs.append(
+                OccupiedDateTime(
+                    game_id=g.game_id,
+                    game_to_book_id=g.id,
+                    datetime=date
                 )
-        session.add_all(occupied_objs)
-        for b_obj in basket_items:
-            session.delete(b_obj)
+            )
+    session.add_all(occupied_objs)
+    for b_obj in basket_items:
+        session.delete(b_obj)
 
-        session.commit()
+    session.commit()
 
-    except:
-        session.rollback()
-        raise HTTPException(status_code=500, detail='Something went wrong')
     total_discount = ceil(sum([g.game_price_before for g in gamestobook]) * total_hours) - ceil(sum([g.game_price_after for g in gamestobook]) * total_hours)
     email_data = {
         'order': {
@@ -221,4 +213,11 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     send_invoice(to=book.client_email,
                  subject='Booking Invoice',
                  data=email_data)
-    return CreateOrderOK(checkout_url="https://google.com")
+
+    # if book.payment_method == 'prepayment':
+        # new_order_sms_notification(book)
+    return CreateOrderOK(
+        payment_method=book.payment_method,
+        order_id=book.id,
+        checkout_url="https://google.com" if book.payment_method == 'card' else None
+    )

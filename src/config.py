@@ -19,3 +19,5 @@ SMTP_USER=os.getenv("SMTP_USER", None)
 SMTP_FROM=os.getenv("SMTP_FROM", None)
 SMTP_PASSWORD=os.getenv("SMTP_PASSWORD", None)
 
+SMSTO_TOKEN = os.getenv('SMSTOTOKEN', None)
+

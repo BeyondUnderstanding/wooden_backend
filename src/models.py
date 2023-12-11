@@ -86,9 +86,14 @@ class Book(Base):
     client_name: Mapped[str]
     client_phone: Mapped[str]
     client_email: Mapped[str]
+
+    payment_method: Mapped[str] = mapped_column(server_default='card')
     is_payed: Mapped[Optional[bool]] = mapped_column(default=False)
     is_refunded: Mapped[Optional[bool]] = mapped_column(default=False)
     is_canceled: Mapped[bool] = mapped_column(default=False)
+    is_prepayment: Mapped[bool] = mapped_column(server_default='0')
+    prepayment_done: Mapped[bool] = mapped_column(server_default='0')
+
     legal_id: Mapped[str] = mapped_column(String(11))
     has_manager: Mapped[Optional[bool]] = mapped_column(default=False)
     managers_count: Mapped[Optional[int]] = mapped_column(default=0)
@@ -100,6 +105,7 @@ class Book(Base):
 
     games: Mapped[List[GameToBook]] = relationship(back_populates='book')
     bonus_game: Mapped[Game] = relationship(back_populates='as_bonus')
+    messages: Mapped[List['Message']] = relationship(back_populates='book')
 
     @validates('legal_id')
     def validate_legal_id(self, key, legal_id) -> str:  # noqa
@@ -146,3 +152,16 @@ class Config(Base):
     key: Mapped[str]
     value: Mapped[str]
 
+
+# class Payment(Base):
+#     order_id: Mapped[int]
+#
+
+class Message(Base):
+    book_id: Mapped[int]
+    phone_number: Mapped[str]
+    message: Mapped[str]
+    is_delivered: Mapped[bool]
+    sent_at: Mapped[datetime]
+    
+    book: Mapped[Book] = relationship(back_populates='messages')

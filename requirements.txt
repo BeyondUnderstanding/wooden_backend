@@ -21,3 +21,4 @@ httpx
 pytest
 pdfkit
 jinja2
+smsto

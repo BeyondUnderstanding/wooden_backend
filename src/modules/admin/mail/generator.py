@@ -9,15 +9,7 @@ from src.config import SMTP_FROM, SMTP_SERVER, SMTP_PASSWORD, SMTP_USER
 
 
 def generate_invoice(data) -> bytes:
-    path = None
-    try:
-        path = os.getcwd() + '/src/modules/admin/mail/templates'
-        print(path)
-    except:
-        print('Excepted at string 15')
-        # TODO: ???
-        path = os.getcwd()
-        ...
+    path = os.getcwd() + '/src/modules/admin/mail/templates'
     templateLoader = FileSystemLoader(searchpath=path)
     templateEnv = Environment(loader=templateLoader, autoescape=True)
     template = templateEnv.get_template('invoice.html')

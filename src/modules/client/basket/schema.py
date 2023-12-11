@@ -1,3 +1,4 @@
+import enum
 from typing import Optional
 
 from pydantic import BaseModel, Field, EmailStr, field_serializer
@@ -13,6 +14,10 @@ class AddToBasketSchema(BaseModel):
 class BasketItemWithShortInfo(BaseModel):
     game: GameSchema
 
+class PaymentMethod(enum.Enum):
+    prepayment = 'prepayment'
+    card = 'card'
+
 
 class CreateBooking(BaseModel):
     client_name: str
@@ -21,6 +26,7 @@ class CreateBooking(BaseModel):
     delivery_address: str
     extra: Optional[str] = Field(default=None)
     legal_id: str = Field(min_length=11, max_length=11, pattern="^\\d+$", )
+    payment_method: PaymentMethod
 
 
 class UpdateBasketDates(BaseModel):
@@ -47,5 +53,7 @@ class EmptyBasketException(BaseModel):
 
 
 class CreateOrderOK(BaseModel):
-    checkout_url: str
+    order_id: int
+    payment_method: str
+    checkout_url: Optional[str]
 

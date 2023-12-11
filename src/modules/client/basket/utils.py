@@ -1,8 +1,9 @@
 import datetime
 from typing import List
 
-from src.models import Basket, BasketItem
+from src.models import Basket, BasketItem, Book
 from pandas import date_range
+from src.utils import sms
 
 
 def calculate_hours(b: Basket):
@@ -40,3 +41,16 @@ def calculate_order(bi: List[BasketItem], b: Basket) -> tuple[int, int, bool]:
         bonus_game = True
 
     return current_discount, managers_count, bonus_game
+
+
+def new_order_sms_notification(book: Book):
+    message = None
+
+    if book.payment_method == 'prepayment':
+        message = ''
+    elif book.payment_method == 'card':
+        message = ''
+
+    return sms.SMS.send_single_message(
+        message=message, to=book.client_phone, sender_id='WoodenGames'
+    )
