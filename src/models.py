@@ -158,7 +158,7 @@ class Config(Base):
 #
 
 class Message(Base):
-    book_id: Mapped[int]
+    book_id: Mapped[int] = mapped_column(ForeignKey(Book.id))
     phone_number: Mapped[str]
     message: Mapped[str]
     is_delivered: Mapped[bool]
