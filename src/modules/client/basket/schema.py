@@ -54,6 +54,6 @@ class EmptyBasketException(BaseModel):
 
 class CreateOrderOK(BaseModel):
     order_id: int
-    payment_method: str
+    payment_method: PaymentMethod
     checkout_url: Optional[str]
 

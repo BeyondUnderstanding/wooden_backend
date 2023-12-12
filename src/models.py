@@ -3,6 +3,8 @@ from typing import Optional, List
 from sqlalchemy import String, ForeignKey, select, and_, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, declared_attr, DeclarativeBase
 
+from src.modules.client.basket.schema import PaymentMethod
+
 
 class Base(DeclarativeBase):
     __abstract__ = True
@@ -87,7 +89,7 @@ class Book(Base):
     client_phone: Mapped[str]
     client_email: Mapped[str]
 
-    payment_method: Mapped[str] = mapped_column(server_default='card')
+    payment_method: Mapped[PaymentMethod] = mapped_column(server_default='card')
     is_payed: Mapped[Optional[bool]] = mapped_column(default=False)
     is_refunded: Mapped[Optional[bool]] = mapped_column(default=False)
     is_canceled: Mapped[bool] = mapped_column(default=False)
