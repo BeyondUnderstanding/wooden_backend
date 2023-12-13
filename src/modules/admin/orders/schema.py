@@ -19,9 +19,13 @@ class OrderModel(BaseModel):
     client_name: str
     client_phone: str
     client_email: str
+
     is_payed: bool
     is_refunded: bool
     is_canceled: bool
+    is_prepayment: bool
+    prepayment_done: bool
+
     legal_id: str
     has_manager: bool
     managers_count: int
