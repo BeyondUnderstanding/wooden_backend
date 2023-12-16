@@ -14,6 +14,12 @@ from src.modules.exceptions import NOT_IMPLEMENTED
 grid_router = APIRouter(prefix='/grid')
 
 
+@grid_router.get('/', tags=['Grid'])
+async def get_timeslots(session: Session = Depends(get_db),
+                         auth: JwtAuthorizationCredentials = Security(access_security)):
+    timeslots = session.scalars(select(OccupiedDateTime))
+
+
 @grid_router.post('/close', tags=['Grid'])
 async def close_timeslot(data: CloseTimeslotModel, session: Session = Depends(get_db),
                          auth: JwtAuthorizationCredentials = Security(access_security)):

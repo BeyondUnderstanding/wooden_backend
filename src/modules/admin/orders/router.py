@@ -68,7 +68,7 @@ async def set_prepayment(order_id: int,
 
 
 @orders_router.delete('/{order_id}/cancel', tags=['AdminOrders'])
-async def cancel_order(order_id: int,
+async def cancel_order(order_id: int, need_refund: bool = False,
                        session: Session = Depends(get_db),
                        auth: JwtAuthorizationCredentials = Security(access_security)):
     order = session.get(Book, order_id)
@@ -76,7 +76,7 @@ async def cancel_order(order_id: int,
         raise HTTPException(status_code=404, detail='Order not found')
 
     order.is_canceled = True
-    if order.is_payed:
+    if order.is_payed and need_refund:
         # TODO: Start refund logic
         pass
 

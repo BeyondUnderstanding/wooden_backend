@@ -66,6 +66,8 @@ async def get_one(id: int, session: Session = Depends(get_db), uuid: str = Depen
     if not game:
         return JSONResponse(status_code=404, content={'error': 'game not found'})
 
+    print(f'/v1/client/games/get/id={id}', game)
+
     current_basket = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
 
     return populate_adapter_full(game, current_basket.start_date, current_basket.end_date)
