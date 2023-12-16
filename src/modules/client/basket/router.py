@@ -7,7 +7,8 @@ from src.db.database import get_db
 from src.models import Basket, BasketItem, Game, Book, GameToBook, OccupiedDateTime
 from src.modules.client.basket.schema import AddToBasketSchema, CreateBooking, UpdateBasketDates, \
     CreateOrderOK
-from src.modules.client.basket.utils import calculate_order, calculate_hours, calculate_delta, new_order_sms_notification
+from src.modules.client.basket.utils import calculate_order, calculate_hours, calculate_delta, \
+    new_order_sms_notification
 from src.modules.client.games.schema import GameSchema
 from src.modules.client.games.utils import populate_adapter
 from src.modules.schema import CreateObjectSchema, DeletedObjectSchema
@@ -19,12 +20,16 @@ basket = APIRouter(prefix='/basket', tags=['Basket'])
 
 
 def check_basket_exist(uuid: str, session: Session):
-    if not session.scalar(select(Basket).where(Basket.user_uuid == uuid)):
-        try:
-            session.add(Basket(user_uuid=uuid))  # noqa
-            session.commit()
-        except:
-            session.rollback()
+    if b := session.scalar(select(Basket).where(Basket.user_uuid == uuid)):
+        return b
+    else:
+        b = Basket(user_uuid=uuid)
+        session.add(b)  # noqa
+        session.commit()
+        session.flush()
+        return b
+
+
 
 
 @basket.get('', response_model=List[GameSchema])
@@ -171,7 +176,6 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     session.add_all(gamestobook)
     session.flush()
 
-
     # TODO: Move to bank hook, occupy date only after payment completion
     occupied_objs = []
     for g in gamestobook:
@@ -189,7 +193,8 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
 
     session.commit()
 
-    total_discount = ceil(sum([g.game_price_before for g in gamestobook]) * total_hours) - ceil(sum([g.game_price_after for g in gamestobook]) * total_hours)
+    total_discount = ceil(sum([g.game_price_before for g in gamestobook]) * total_hours) - ceil(
+        sum([g.game_price_after for g in gamestobook]) * total_hours)
     email_data = {
         'order': {
             'id': book.id,
@@ -215,7 +220,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
                  data=email_data)
 
     # if book.payment_method == 'prepayment':
-        # new_order_sms_notification(book)
+    # new_order_sms_notification(book)
     return CreateOrderOK(
         payment_method=book.payment_method,
         order_id=book.id,
