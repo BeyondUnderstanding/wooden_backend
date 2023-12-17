@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, and_, func
 from sqlalchemy.orm import Session
 from src.db.database import get_db
-from src.models import Basket, BasketItem, Game, Book, GameToBook, OccupiedDateTime
+from src.models import Basket, BasketItem, Game, Book, GameToBook, OccupiedDateTime, Config
 from src.modules.client.basket.schema import AddToBasketSchema, CreateBooking, UpdateBasketDates, \
     CreateOrderOK
 from src.modules.client.basket.utils import calculate_order, calculate_hours, calculate_delta, \
@@ -28,8 +28,6 @@ def check_basket_exist(uuid: str, session: Session):
         session.commit()
         session.flush()
         return b
-
-
 
 
 @basket.get('', response_model=List[GameSchema])
@@ -146,7 +144,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     # Считаем сумму всех игр и умножаем на кол-во часов.
     # Округляем в бОльшую сторону, плюс, плюсуем 15 лари за доставку
     total = ceil(sum([g.game_price_after for g in gamestobook]) * total_hours) + 15
-
+    bonus_game_id = session.scalar(select(Config.value).where(Config.key == 'bonus_game')) if bonus_game else None
     book = Book(
         user_uuid=uuid,
         start_date=basket_obj.start_date,
@@ -158,7 +156,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         has_manager=bool(managers),
         managers_count=managers,
         has_bonus_game=bonus_game,
-        bonus_game_id=None,
+        bonus_game_id=bonus_game_id,
         total_price=total,
         delivery_address=data.delivery_address,
         extra=data.extra,

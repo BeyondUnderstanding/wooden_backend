@@ -26,28 +26,34 @@ async def create(data: GameSchema, session: Session = Depends(get_db),
 
     return {'id': new_game.id}
 
+
 def game_with_is_bonus(obj: Game, bonus_game_id: int):
     return {
         **obj.__dict__,
+        'images': obj.images,
         'is_bonus_game': obj.id == bonus_game_id
     }
+
 
 @games_router.get('', response_model=List[GameSchemaBasic], tags=['Games'])
 async def get(session: Session = Depends(get_db), auth: JwtAuthorizationCredentials = Security(access_security)):
     games = session.scalars(select(Game).where(Game.is_deleted == False).order_by(Game.id.asc()))  # noqa
-    if c:= session.scalar(select(Config).where(Config.key == 'bonus_game')):
+    if c := session.scalar(select(Config).where(Config.key == 'bonus_game')):
         bonus_game = c.value
     else:
         bonus_game = 9999
     return [game_with_is_bonus(game, int(bonus_game)) for game in games]
 
+
 @games_router.get('/{game_id}', response_model=GameSchemaWithAttributes, tags=['Games'])
-async def get_by_id(game_id: int, session: Session = Depends(get_db), auth: JwtAuthorizationCredentials = Security(access_security)):
+async def get_by_id(game_id: int, session: Session = Depends(get_db),
+                    auth: JwtAuthorizationCredentials = Security(access_security)):
     return session.get(Game, game_id)
+
 
 @games_router.patch('', response_model=UpdateObjectSchema, tags=['Games'])
 async def patch(data: GameSchemaUpdate, session: Session = Depends(get_db),
-                 auth: JwtAuthorizationCredentials = Security(access_security)):
+                auth: JwtAuthorizationCredentials = Security(access_security)):
     game = session.get(Game, data.id)
 
     for k, v in data.model_dump().items():
@@ -67,7 +73,3 @@ async def delete(id: int, session: Session = Depends(get_db),
     session.add(game)
     session.commit()
     return {'id': game.id}
-
-
-
-

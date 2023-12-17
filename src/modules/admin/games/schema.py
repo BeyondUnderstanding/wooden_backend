@@ -8,6 +8,7 @@ class GameSchemaBasic(BaseModel):
     title: str
     price: float
     is_deleted: bool
+    images: List[ImageSchema]
     is_bonus_game: Optional[bool] = Field(default=False)
 
 class GameSchema(BaseModel):
