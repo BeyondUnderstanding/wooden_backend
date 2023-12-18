@@ -1,4 +1,4 @@
-from typing import Optional, Annotated
+from typing import Optional, Annotated, List
 from uuid import UUID
 
 from fastapi import Header, HTTPException
@@ -9,6 +9,9 @@ class CreateObjectSchema(BaseModel):
     message: Optional[str] = Field(default='Created')
     id: int
 
+class CreateBulkSchema(BaseModel):
+    message: Optional[str] = Field(default='Items created')
+    ids: List[int]
 
 class UpdateObjectSchema(BaseModel):
     message: Optional[str] = Field(default='Updated')

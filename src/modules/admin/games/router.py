@@ -16,7 +16,7 @@ games_router = APIRouter(prefix='/games')
 games_router.include_router(attributes_router, tags=['Attributes'])
 
 
-@games_router.post('', response_model=CreateObjectSchema, tags=['Games'])
+@games_router.post('', response_model=CreateObjectSchema, tags=['AdminGames'])
 async def create(data: GameSchema, session: Session = Depends(get_db),
                  auth: JwtAuthorizationCredentials = Security(access_security)):
     new_game = Game(**data.model_dump())  # noqa
@@ -35,7 +35,7 @@ def game_with_is_bonus(obj: Game, bonus_game_id: int):
     }
 
 
-@games_router.get('', response_model=List[GameSchemaBasic], tags=['Games'])
+@games_router.get('', response_model=List[GameSchemaBasic], tags=['AdminGames'])
 async def get(session: Session = Depends(get_db), auth: JwtAuthorizationCredentials = Security(access_security)):
     games = session.scalars(select(Game).where(Game.is_deleted == False).order_by(Game.id.asc()))  # noqa
     if c := session.scalar(select(Config).where(Config.key == 'bonus_game')):
@@ -45,13 +45,13 @@ async def get(session: Session = Depends(get_db), auth: JwtAuthorizationCredenti
     return [game_with_is_bonus(game, int(bonus_game)) for game in games]
 
 
-@games_router.get('/{game_id}', response_model=GameSchemaWithAttributes, tags=['Games'])
+@games_router.get('/{game_id}', response_model=GameSchemaWithAttributes, tags=['AdminGames'])
 async def get_by_id(game_id: int, session: Session = Depends(get_db),
                     auth: JwtAuthorizationCredentials = Security(access_security)):
     return session.get(Game, game_id)
 
 
-@games_router.patch('', response_model=UpdateObjectSchema, tags=['Games'])
+@games_router.patch('', response_model=UpdateObjectSchema, tags=['AdminGames'])
 async def patch(data: GameSchemaUpdate, session: Session = Depends(get_db),
                 auth: JwtAuthorizationCredentials = Security(access_security)):
     game = session.get(Game, data.id)
@@ -65,7 +65,7 @@ async def patch(data: GameSchemaUpdate, session: Session = Depends(get_db),
     return {'id': game.id}
 
 
-@games_router.delete('', response_model=DeletedObjectSchema, tags=['Games'])
+@games_router.delete('', response_model=DeletedObjectSchema, tags=['AdminGames'])
 async def delete(id: int, session: Session = Depends(get_db),
                  auth: JwtAuthorizationCredentials = Security(access_security)):
     game = session.get(Game, id)

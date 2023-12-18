@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +14,10 @@ class GameAttributeSchema(BaseModel):
 
 class GameAttributeCreateSchema(GameAttributeSchema):
     game_id: int
+
+
+class GameAttributeCreateBulkSchema(BaseModel):
+    items: List[GameAttributeCreateSchema]
 
 
 class GameAttributeWithID(GameAttributeSchema):

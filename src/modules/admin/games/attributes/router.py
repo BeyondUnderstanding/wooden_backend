@@ -9,21 +9,24 @@ from src.db.database import get_db
 from src.models import GameAttribute
 from src.modules.admin.auth.router import access_security
 from src.modules.admin.games.attributes.schema import GameAttributeWithID, GameAttributeOptionalSchema
-from .schema import GameAttributeCreateSchema
-from src.modules.schema import CreateObjectSchema, UpdateObjectSchema, DeletedObjectSchema
+from .schema import GameAttributeCreateBulkSchema
+from src.modules.schema import CreateObjectSchema, UpdateObjectSchema, DeletedObjectSchema, CreateBulkSchema
 
 attributes_router = APIRouter(prefix='/attribute')
 
 
-@attributes_router.post('', response_model=CreateObjectSchema, tags=['Attributes'])
-async def create_attribute(data: GameAttributeCreateSchema, session: Session = Depends(get_db),
+@attributes_router.post('', response_model=CreateBulkSchema, tags=['Attributes'])
+async def create_attribute(data: GameAttributeCreateBulkSchema, session: Session = Depends(get_db),
                            auth: JwtAuthorizationCredentials = Security(access_security)):
-    new_attribute = GameAttribute(**data.model_dump())  # noqa
-    session.add(new_attribute)
-    session.commit()
-    session.refresh(new_attribute)
+    ids = []
+    for att in data:
+            new_attribute = GameAttribute(**att.model_dump())  # noqa
+            session.add(new_attribute)
+            session.commit()
+            session.refresh(new_attribute)
+            ids.append(new_attribute.id)
 
-    return {'id': new_attribute.id}
+    return {'ids': ids}
 
 
 @attributes_router.get('', response_model=List[GameAttributeWithID])
