@@ -19,7 +19,7 @@ attributes_router = APIRouter(prefix='/attribute')
 async def create_attribute(data: GameAttributeCreateBulkSchema, session: Session = Depends(get_db),
                            auth: JwtAuthorizationCredentials = Security(access_security)):
     ids = []
-    for att in data:
+    for att in data.items:
             new_attribute = GameAttribute(**att.model_dump())  # noqa
             session.add(new_attribute)
             session.commit()
