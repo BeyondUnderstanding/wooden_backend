@@ -12,7 +12,13 @@ class GameAttributeSchema(BaseModel):
     is_main: Optional[bool] = Field(default=False)
 
 
-class GameAttributeCreateSchema(GameAttributeSchema):
+class GameAttributeWOID(BaseModel):
+    name: str
+    value: str
+    is_main: Optional[bool] = Field(default=False)
+
+
+class GameAttributeCreateSchema(GameAttributeWOID):
     game_id: int
 
 
