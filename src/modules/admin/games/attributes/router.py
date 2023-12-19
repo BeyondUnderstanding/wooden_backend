@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter, Depends, Security, Query
 from fastapi_jwt import JwtAuthorizationCredentials
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -55,10 +55,10 @@ async def update_attribute(data: GameAttributeUpdateBulkSchema, session: Session
 
 
 @attributes_router.delete('', response_model=DeleteBulkSchema)
-async def delete_attribute(items: List[int], session: Session = Depends(get_db),
+async def delete_attribute(item_id: List[int] = Query(), session: Session = Depends(get_db),
                          auth: JwtAuthorizationCredentials = Security(access_security)):
     ids = []
-    for att in items:
+    for att in item_id:
         att = session.get(GameAttribute, att)
         if not att:
             continue
