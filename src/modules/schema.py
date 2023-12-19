@@ -9,13 +9,25 @@ class CreateObjectSchema(BaseModel):
     message: Optional[str] = Field(default='Created')
     id: int
 
+
 class CreateBulkSchema(BaseModel):
     message: Optional[str] = Field(default='Items created')
     ids: List[int]
 
+
 class UpdateObjectSchema(BaseModel):
     message: Optional[str] = Field(default='Updated')
     id: int
+
+
+class UpdateBulkSchema(BaseModel):
+    message: Optional[str] = Field(default='Items updated')
+    ids: List[int]
+
+
+class DeleteBulkSchema(BaseModel):
+    message: Optional[str] = Field(default='Items deleted')
+    ids: List[int]
 
 
 class DeletedObjectSchema(BaseModel):

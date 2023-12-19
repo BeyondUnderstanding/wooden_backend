@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 from src.db.database import get_db
 from src.models import GameAttribute
 from src.modules.admin.auth.router import access_security
-from src.modules.admin.games.attributes.schema import GameAttributeWithID, GameAttributeOptionalSchema
+from src.modules.admin.games.attributes.schema import GameAttributeWithID, GameAttributeUpdateBulkSchema
 from .schema import GameAttributeCreateBulkSchema
-from src.modules.schema import CreateObjectSchema, UpdateObjectSchema, DeletedObjectSchema, CreateBulkSchema
+from src.modules.schema import UpdateBulkSchema, DeletedObjectSchema, CreateBulkSchema, DeleteBulkSchema
 
 attributes_router = APIRouter(prefix='/attribute')
 
@@ -36,22 +36,33 @@ async def get_attributes(game: int, session: Session = Depends(get_db),
     return attributes
 
 
-@attributes_router.patch('', response_model=UpdateObjectSchema)
-async def update_attribute(attribute_id: int, data: GameAttributeOptionalSchema, session: Session = Depends(get_db),
+@attributes_router.patch('', response_model=UpdateBulkSchema)
+async def update_attribute(data: GameAttributeUpdateBulkSchema, session: Session = Depends(get_db),
                          auth: JwtAuthorizationCredentials = Security(access_security)):
-    att = session.get(GameAttribute, attribute_id)
-    for k, v in data.model_dump().items():
-        if v is not None:
-            setattr(att, k, v)
-    session.add(att)
+    ids = []
+    for att in data.items:
+        att_model: GameAttribute | None = session.get(GameAttribute, att.id)
+        if not att:
+            continue
+        for k, v in att.model_dump().items():
+            if v is not None:
+                setattr(att_model, k, v)
+        ids.append(att_model)
+    session.add_all(ids)
     session.commit()
-    return {'id': att.id}
+    session.flush()
+    return {'ids': [i.id for i in ids]}
 
 
-@attributes_router.delete('', response_model=DeletedObjectSchema)
-async def delete_attribute(attribute_id: int, session: Session = Depends(get_db),
+@attributes_router.delete('', response_model=DeleteBulkSchema)
+async def delete_attribute(items: List[int], session: Session = Depends(get_db),
                          auth: JwtAuthorizationCredentials = Security(access_security)):
-    att = session.get(GameAttribute, attribute_id)
-    session.delete(att)
+    ids = []
+    for att in items:
+        att = session.get(GameAttribute, att)
+        if not att:
+            continue
+        session.delete(att)
+        ids.append(att.id)
     session.commit()
-    return {'id': att.id}
+    return {'ids': ids}

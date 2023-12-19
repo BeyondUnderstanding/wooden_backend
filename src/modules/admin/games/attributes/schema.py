@@ -35,6 +35,11 @@ class GameAttributeGetSchema(GameAttributeSchema):
 
 
 class GameAttributeOptionalSchema(BaseModel):
+    id: int
     name: Optional[str] = Field(default=None)
     value: Optional[str] = Field(default=None)
     is_main: Optional[bool] = Field(default=None)
+
+
+class GameAttributeUpdateBulkSchema(BaseModel):
+    items: List[GameAttributeOptionalSchema]
