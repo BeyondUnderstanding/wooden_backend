@@ -29,8 +29,8 @@ class CryptoWebhookDataObject(BaseModel):
     cancel_url: str
     description: str
     live_mode: bool
-    metadata: Optional[Dict[str, str]]
-    tax: Optional[Dict[str, str]]
+    metadata: Optional[Dict[str, str] | None]
+    tax: Optional[Dict[str, str] | None]
     order_id: str
     recipient: str
     status: str
