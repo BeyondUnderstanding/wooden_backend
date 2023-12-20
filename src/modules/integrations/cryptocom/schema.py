@@ -22,7 +22,7 @@ class CryptoWebhookDataObject(BaseModel):
     crypto_currency: str
     crypto_amount: str
     currency: str
-    customer_id: Optional[str]
+    customer_id: Optional[str | None]
     data_url: str
     payment_url: str
     return_url: str
@@ -37,7 +37,7 @@ class CryptoWebhookDataObject(BaseModel):
     qr_code: str
     deep_link: str
     expired_at: int
-    sub_merchant_id: Optional[str]
+    sub_merchant_id: Optional[str | None]
 
 
 class CryptoWebhookData(BaseModel):
