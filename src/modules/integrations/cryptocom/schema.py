@@ -29,8 +29,8 @@ class CryptoWebhookDataObject(BaseModel):
     cancel_url: str
     description: str
     live_mode: bool
-    metadata: Any
-    tax: Any
+    metadata: Any   # I fuck this shit!
+    tax: Any  # Same shit!
     order_id: str
     recipient: str
     status: str
