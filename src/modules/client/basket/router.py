@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from src.db.database import get_db
 from src.models import Basket, BasketItem, Game, Book, GameToBook, OccupiedDateTime, Config
 from src.modules.client.basket.schema import AddToBasketSchema, CreateBooking, UpdateBasketDates, \
-    CreateOrderOK
+    CreateOrderOK, PaymentMethod
 from src.modules.client.basket.utils import calculate_order, calculate_hours, calculate_delta, \
     new_order_sms_notification
 from src.modules.client.games.schema import GameSchema
@@ -15,6 +15,7 @@ from src.modules.schema import CreateObjectSchema, DeletedObjectSchema
 from src.modules.schema import require_uuid, UpdateObjectSchema
 from math import ceil
 from src.modules.admin.mail.generator import send_invoice
+from src.modules.integrations.cryptocom.utils import crypto_create_payment
 
 basket = APIRouter(prefix='/basket', tags=['Basket'])
 
@@ -213,14 +214,17 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         ]
     }
     # TODO: Move send_invoice to bank hook, send invoices only after payment completion
-    send_invoice(to=book.client_email,
-                 subject='Booking Invoice',
-                 data=email_data)
+    # send_invoice(to=book.client_email,
+    #              subject='Booking Invoice',
+    #              data=email_data)
 
     # if book.payment_method == 'prepayment':
     # new_order_sms_notification(book)
+    if book.payment_method == PaymentMethod.cryptocom:
+        payment = crypto_create_payment(book.id, book.total_price, 'USD', 'WoodenGames.ge booking')
+        checkout_url = payment.payment_url
     return CreateOrderOK(
         payment_method=book.payment_method,
         order_id=book.id,
-        checkout_url="https://google.com" if book.payment_method == 'card' else None
+        checkout_url=checkout_url
     )

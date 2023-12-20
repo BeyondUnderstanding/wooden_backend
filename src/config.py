@@ -20,4 +20,4 @@ SMTP_FROM=os.getenv("SMTP_FROM", None)
 SMTP_PASSWORD=os.getenv("SMTP_PASSWORD", None)
 
 SMSTO_TOKEN = os.getenv('SMSTOTOKEN', None)
-
+CRYPTO_SECRET = os.getenv('CRYPTOCOMTESTSECRET', None)

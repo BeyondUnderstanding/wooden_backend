@@ -14,7 +14,10 @@ def generate_invoice(data) -> bytes:
     templateEnv = Environment(loader=templateLoader, autoescape=True)
     template = templateEnv.get_template('invoice.html')
     raw_html = template.render(data)
+    # try:
     config = pdfkit.configuration(wkhtmltopdf='/usr/local/bin/wkhtmltopdf')
+    # except OSError:  # for windows tests
+    #     config = pdfkit.configuration(wkhtmltopdf="C:/Program Files/wkhtmltopdf/bin/wkhtmltopdf.exe")
     return pdfkit.from_string(raw_html)
 
 

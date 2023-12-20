@@ -14,9 +14,12 @@ class AddToBasketSchema(BaseModel):
 class BasketItemWithShortInfo(BaseModel):
     game: GameSchema
 
+
 class PaymentMethod(enum.Enum):
     prepayment = 'prepayment'
     card = 'card'
+    paypal = 'paypal'
+    cryptocom = 'cryptocom'
 
 
 class CreateBooking(BaseModel):
