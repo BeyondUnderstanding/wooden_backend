@@ -214,15 +214,22 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         ]
     }
     # TODO: Move send_invoice to bank hook, send invoices only after payment completion
-    # send_invoice(to=book.client_email,
-    #              subject='Booking Invoice',
-    #              data=email_data)
 
-    # if book.payment_method == 'prepayment':
-    # new_order_sms_notification(book)
+    checkout_url = None
     if book.payment_method == PaymentMethod.cryptocom:
         payment = crypto_create_payment(book.id, book.total_price, 'USD', 'WoodenGames.ge booking')
         checkout_url = payment.payment_url
+    if book.payment_method == PaymentMethod.paypal:
+        checkout_url = f'https://woodengames.ge/order/{book.id}/not_implemented'
+    if book.payment_method == PaymentMethod.prepayment:
+        checkout_url = f'https://woodengames.ge/order/{book.id}/success'
+    if book.payment_method == PaymentMethod.card:
+        checkout_url = f'https://woodengames.ge/order/{book.id}/deprecated'
+        # new_order_sms_notification(book)
+        send_invoice(to=book.client_email,
+                     subject='Booking Invoice',
+                     data=email_data)
+
     return CreateOrderOK(
         payment_method=book.payment_method,
         order_id=book.id,
