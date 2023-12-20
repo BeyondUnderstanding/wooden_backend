@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 from pydantic import BaseModel
 
@@ -29,8 +29,8 @@ class CryptoWebhookDataObject(BaseModel):
     cancel_url: str
     description: str
     live_mode: bool
-    metadata: Optional[Dict[str, str] | None]
-    tax: Optional[Dict[str, str] | None]
+    metadata: Any
+    tax: Any
     order_id: str
     recipient: str
     status: str
