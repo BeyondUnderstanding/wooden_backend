@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Optional, List
 from sqlalchemy import String, ForeignKey, select, and_, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, declared_attr, DeclarativeBase
-
 from src.modules.client.basket.schema import PaymentMethod
 
 

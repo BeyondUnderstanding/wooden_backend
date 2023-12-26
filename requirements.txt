@@ -22,3 +22,5 @@ pytest
 pdfkit
 jinja2
 smsto
+paypalrestsdk==2.0.0rc2
+pyTelegramBotAPI

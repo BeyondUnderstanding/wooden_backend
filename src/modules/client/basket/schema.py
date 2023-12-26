@@ -2,7 +2,7 @@ import enum
 from typing import Optional
 
 from pydantic import BaseModel, Field, EmailStr, field_serializer
-from pydantic.types import AwareDatetime
+from pydantic.types import AwareDatetime, FutureDatetime
 
 from src.modules.client.games.schema import GameSchema
 
@@ -33,8 +33,8 @@ class CreateBooking(BaseModel):
 
 
 class UpdateBasketDates(BaseModel):
-    start_date: AwareDatetime
-    end_date: AwareDatetime
+    start_date: FutureDatetime
+    end_date: FutureDatetime
 
 
 class MinRequirementsException(BaseModel):

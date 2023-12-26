@@ -3,6 +3,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, and_, func
 from sqlalchemy.orm import Session
+
+from src.config import IS_DEV
 from src.db.database import get_db
 from src.models import Basket, BasketItem, Game, Book, GameToBook, OccupiedDateTime, Config
 from src.modules.client.basket.schema import AddToBasketSchema, CreateBooking, UpdateBasketDates, \
@@ -11,6 +13,7 @@ from src.modules.client.basket.utils import calculate_order, calculate_hours, ca
     new_order_sms_notification
 from src.modules.client.games.schema import GameSchema
 from src.modules.client.games.utils import populate_adapter
+from src.modules.integrations.telegram.module import new_order_notification
 from src.modules.schema import CreateObjectSchema, DeletedObjectSchema
 from src.modules.schema import require_uuid, UpdateObjectSchema
 from math import ceil
@@ -87,8 +90,12 @@ async def delete_item(id: int, session: Session = Depends(get_db), uuid: str = D
 async def update_basket(data: UpdateBasketDates, session: Session = Depends(get_db), uuid: str = Depends(require_uuid)):
     check_basket_exist(uuid, session)
     basket_obj = session.scalar(select(Basket).where(Basket.user_uuid == uuid))
-    basket_obj.start_date = data.start_date
-    basket_obj.end_date = data.end_date
+
+    # I don't know why, but without subtracting it writes to DB +3 UTC time
+    start_date = data.start_date.replace(minute=0, second=0, microsecond=0) - datetime.timedelta(hours=3)
+    end_date = data.end_date.replace(minute=0, second=0, microsecond=0) - datetime.timedelta(hours=3)
+    basket_obj.start_date = start_date
+    basket_obj.end_date = end_date
     try:
         session.add(basket_obj)
         session.commit()
@@ -107,6 +114,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
     if not basket_obj.start_date or not basket_obj.end_date:
         raise HTTPException(status_code=400, detail='Dates are invalid')
     total_hours = calculate_hours(basket_obj)
+    print(total_hours)
     if total_hours < 3:
         raise HTTPException(status_code=400, detail='Minimum requirements for the order are not met')
     if not basket_items:
@@ -162,7 +170,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         delivery_address=data.delivery_address,
         extra=data.extra,
         payment_method=data.payment_method,
-        is_prepayment=True if data.payment_method == 'prepayment' else False,
+        is_prepayment=True if data.payment_method == PaymentMethod.prepayment else False,
         prepayment_done=False
     )
 
@@ -223,12 +231,14 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         checkout_url = f'https://woodengames.ge/order/{book.id}/not_implemented'
     if book.payment_method == PaymentMethod.prepayment:
         checkout_url = f'https://woodengames.ge/order/{book.id}/success'
-    if book.payment_method == PaymentMethod.card:
-        checkout_url = f'https://woodengames.ge/order/{book.id}/deprecated'
-        # new_order_sms_notification(book)
-        send_invoice(to=book.client_email,
+        if not IS_DEV:
+            new_order_sms_notification(book)
+            send_invoice(to=book.client_email,
                      subject='Booking Invoice',
                      data=email_data)
+            new_order_notification(book)
+    if book.payment_method == PaymentMethod.card:
+        checkout_url = f'https://woodengames.ge/order/{book.id}/deprecated'
 
     return CreateOrderOK(
         payment_method=book.payment_method,

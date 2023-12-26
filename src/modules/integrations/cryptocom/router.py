@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
-from src.config import CRYPTO_SECRET
+from src.config import CRYPTO_SECRET, IS_DEV
 from src.db.database import get_db
 from src.models import Book
 from src.modules.admin.auth.router import access_security
@@ -14,6 +14,8 @@ from src.modules.client.basket.schema import CreateOrderOK
 from src.modules.integrations.cryptocom.schema import CryptoWebhook
 from src.modules.integrations.cryptocom.utils import crypto_create_payment
 import hashlib, hmac
+
+from src.modules.integrations.telegram.module import new_order_notification
 
 cryptocom = APIRouter(prefix='/payments/crypto', tags=['Payments'])
 
@@ -64,5 +66,7 @@ async def crypto_webhook(data: CryptoWebhook,
     order.is_payed = True
     session.add(order)
     session.commit()
+    if not IS_DEV:
+        new_order_notification(order)
 
     return JSONResponse(content={'status': 'ok'}, status_code=200)
