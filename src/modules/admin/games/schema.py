@@ -22,6 +22,10 @@ class GameSchemaForAdmin(BaseModel):
     title: str
 
 
+class GameSchemaForAdminWithImage(GameSchemaForAdmin):
+    images: List[ImageSchema]
+
+
 class GameSchemaReturn(GameSchema):
     id: int
     sales_count: int

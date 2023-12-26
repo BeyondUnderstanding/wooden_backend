@@ -3,11 +3,11 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from src.modules.admin.games.schema import GameSchemaForAdmin
+from src.modules.admin.games.schema import GameSchemaForAdmin, GameSchemaBasic, GameSchemaForAdminWithImage
 
 
 class GameToBook(BaseModel):
-    game: GameSchemaForAdmin
+    game: GameSchemaForAdminWithImage
     game_price_before: float
     game_price_after: float
 
@@ -35,4 +35,4 @@ class OrderModel(BaseModel):
 
 class OrderModelFull(OrderModel):
     games: List[GameToBook]
-    bonus_game: Optional[GameSchemaForAdmin]
+    bonus_game: Optional[GameSchemaBasic]
