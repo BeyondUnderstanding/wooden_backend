@@ -12,14 +12,22 @@ from src.db.database import get_db
 from src.models import OccupiedDateTime
 from src.modules.admin.orders.grid.schema import CloseTimeslotModel, TimeslotSchema, OpenTimeslotModel
 from src.modules.exceptions import NOT_IMPLEMENTED
+from pydantic.types import PastDate, FutureDate
 
 grid_router = APIRouter(prefix='/grid')
 
 
 @grid_router.get('/', tags=['Grid'], response_model=Dict[str, List[TimeslotSchema]])
-async def get_timeslots(session: Session = Depends(get_db),
+async def get_timeslots(date: PastDate | FutureDate, session: Session = Depends(get_db),
                         auth: JwtAuthorizationCredentials = Security(access_security)):
-    timeslots = session.scalars(select(OccupiedDateTime).order_by(OccupiedDateTime.datetime.asc()))
+
+    timeslots = session.scalars(select(OccupiedDateTime).order_by(OccupiedDateTime.datetime.asc()).where(
+        and_(
+            func.extract('year', OccupiedDateTime.datetime) == date.year,
+            func.extract('month', OccupiedDateTime.datetime) == date.month,
+            func.extract('day', OccupiedDateTime.datetime) == date.day
+        )
+    ))
     dts = {}
     for t in timeslots:
         key = str(t.datetime).split(' ')[0]

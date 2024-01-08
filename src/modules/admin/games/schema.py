@@ -20,6 +20,7 @@ class GameSchema(BaseModel):
 class GameSchemaForAdmin(BaseModel):
     id: int
     title: str
+    images: List[ImageSchema]
 
 
 class GameSchemaForAdminWithImage(GameSchemaForAdmin):
