@@ -29,6 +29,6 @@ async def upload(
     async with aiofiles.open(filename, 'wb') as out_file:
         content = await file.read()  # async read
         await out_file.write(content)  # async write
-    s3.upload_file(filename, 'wooden', filename)
+    s3.upload_file(filename, 'wooden/images', filename)
     os.remove(filename)
-    return {'url': f'https://storage.yandexcloud.net/wooden/{filename}'}
+    return {'url': f'https://storage.yandexcloud.net/wooden/images/{filename}'}
