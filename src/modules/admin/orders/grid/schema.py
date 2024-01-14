@@ -13,6 +13,11 @@ class OpenTimeslotModel(BaseModel):
     timeslot: NaiveDatetime
 
 
+class GameToBookModel(BaseModel):
+    book_id: int
+
+
 class TimeslotSchema(BaseModel):
     game: GameSchemaForAdmin | None
     datetime: datetime
+    game_to_book: GameToBookModel
