@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, AwareDatetime, Field, FutureDatetime, NaiveDatetime
 from datetime import datetime
 
@@ -20,4 +22,4 @@ class GameToBookModel(BaseModel):
 class TimeslotSchema(BaseModel):
     game: GameSchemaForAdmin | None
     datetime: datetime
-    game_to_book: GameToBookModel
+    game_to_book: Optional[GameToBookModel]

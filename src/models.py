@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import String, ForeignKey, select, and_, func
+from sqlalchemy import String, ForeignKey, select, and_, func, or_
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates, declared_attr, DeclarativeBase
 from src.modules.client.basket.schema import PaymentMethod
 
@@ -50,11 +50,14 @@ class Game(Base):
         session = next(get_db())
         availability = session.scalar(select(OccupiedDateTime).where(
             and_(
-                OccupiedDateTime.game_id == self.id,
+                or_(
+                    OccupiedDateTime.game_id == self.id,
+                    OccupiedDateTime.game_id == None  # noqa
+                ),
                 func.extract('year', OccupiedDateTime.datetime).in_(years),
                 func.extract('month', OccupiedDateTime.datetime).in_(months),
                 func.extract('day', OccupiedDateTime.datetime).in_(days)
-                 )
+            )
         ).limit(1))
 
         return not bool(availability)
@@ -164,5 +167,5 @@ class Message(Base):
     message: Mapped[str]
     is_delivered: Mapped[bool]
     sent_at: Mapped[datetime]
-    
+
     book: Mapped[Book] = relationship(back_populates='messages')

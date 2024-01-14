@@ -39,11 +39,11 @@ async def get_featured(session: Session = Depends(get_db), uuid: str = Depends(r
                                            .join(Basket)).all()
     featured = session.scalars(select(Game)
                                .where(
-        and_(
-            Game.is_deleted.is_not(True),
-            Game.id.notin_(current_basket_games)
-        )
-    )
+                                    and_(
+                                        Game.is_deleted.is_not(True),
+                                        Game.id.notin_(current_basket_games)
+                                    )
+                                )
                                .order_by(Game.sales_count.asc())
                                .limit(3))
     return [populate_adapter(g, None, None) for g in featured]
