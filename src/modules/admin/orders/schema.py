@@ -36,3 +36,8 @@ class OrderModel(BaseModel):
 class OrderModelFull(OrderModel):
     games: List[GameToBook]
     bonus_game: Optional[GameSchemaBasic]
+
+
+class OrderSendMessage(BaseModel):
+    message: str
+    

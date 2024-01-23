@@ -7,13 +7,16 @@ from sqlalchemy import select, and_
 from sqlalchemy.orm import Session
 from starlette.responses import JSONResponse
 
+from src.config import IS_DEV
 from src.db.database import get_db
 from src.models import Book, GameToBook, Game
 from .grid.router import grid_router
 from src.modules.exceptions import NOT_IMPLEMENTED
-from .schema import OrderModel, OrderModelFull
+from .schema import OrderModel, OrderModelFull, OrderSendMessage
 from src.modules.admin.auth.router import access_security
 from src.modules.schema import UpdateObjectSchema
+from ..utils import send_sms_message
+
 # from src.modules.client.basket.utils import new_order_sms_notification
 
 orders_router = APIRouter(prefix='/orders')
@@ -92,7 +95,14 @@ async def cancel_order(order_id: int, need_refund: bool = False,
 
 
 @orders_router.post('/{order_id}/sms', tags=['AdminOrders'])
-async def send_message(order_id: int, auth: JwtAuthorizationCredentials = Security(access_security)):
-    # TODO: Send customer custom message
-    # new_order_sms_notification()
-    raise NOT_IMPLEMENTED
+async def send_message(order_id: int,
+                       data: OrderSendMessage,
+                       auth: JwtAuthorizationCredentials = Security(access_security),
+                       session: Session = Depends(get_db)):
+    if not IS_DEV:
+        is_message_sent = send_sms_message(order_id, session, f'Order {order_id} is canceled. Contact us for more info.')
+    else:
+        is_message_sent = True
+    if not is_message_sent:
+        return JSONResponse(content={'message': 'Message is not sent'}, status_code=500)
+    return JSONResponse(content={'message': 'Message sent'})
