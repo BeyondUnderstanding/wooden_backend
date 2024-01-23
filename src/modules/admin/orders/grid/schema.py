@@ -13,6 +13,7 @@ class CloseTimeslotModel(BaseModel):
 
 class OpenTimeslotModel(BaseModel):
     timeslot: NaiveDatetime
+    all_day: bool
 
 
 class GameToBookModel(BaseModel):

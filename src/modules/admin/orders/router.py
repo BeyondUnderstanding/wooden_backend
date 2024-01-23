@@ -63,6 +63,7 @@ async def set_prepayment(order_id: int,
         raise HTTPException(status_code=400, detail='Order already marked as payed')
 
     order.prepayment_done = True
+    order.is_payed = True
 
     session.add(order)
     session.commit()
