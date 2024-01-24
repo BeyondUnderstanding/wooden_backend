@@ -53,5 +53,6 @@ def validate_webhook(auth_algo,
         "webhook_id": webhook_id,
         "webhook_event": event
     }
+    print(payload)
     response = pp_client.execute(WebhookVerifySignatureRequest().request_body(payload))
     return response.result
