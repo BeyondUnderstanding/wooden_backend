@@ -1,51 +1,58 @@
-import requests
+from math import ceil
+from typing import List
+
+from paypalrestsdk.core import PayPalHttpClient
 from paypalrestsdk.v1.orders import OrdersCreateRequest
-from requests.auth import HTTPBasicAuth
-
-from src.models import Book
-
-PP_CLIENT_TEST_ID = 'AVcUxSz9mUf9swLQEkQfa8IYqK5ZZ2qEYfCiBje85_5Om8TiniQ3oAt3qd4K1v_UuuXGXpaEFFcJ0M0j'
-PP_CLIENT_TEST_SECRET = 'ECRGDFdiKAqbZn8zghyhMHTJMJQo1zzLz8_k--BML8TjUMoPAIMQ3hzJhx7ukmw1nkwSzHnQTszpd98G'
+from paypalrestsdk.v1.webhooks.webhook_verify_signature_request import WebhookVerifySignatureRequest
+from src.models import Book, GameToBook
+from src.modules.integrations.paypal.router import client
 
 
-def generate_order(order_id: int,
-                   order: Book):
+def generate_order(order: Book):
+    # TODO: Нужно прикрутить автоматическое получение курса валют
+    # 1 GEL = 0.38 USD
+    USD_RATE = 0.38
+
+    reference_id = f'woodengames_order_{order.id}'
+    amount = round(order.total_price * USD_RATE, 2)
     new_order = OrdersCreateRequest().request_body({
         'purchase_units': [
             {
-                "reference_id": f"woodengamesorder_{order_id}",
+                "reference_id": reference_id,
                 "description": "WoodenGames Booking",
                 "amount": {
                     "currency": "USD",
-                    "total": order.total_price
-                },
-                "items": [
-                    {
-                        "name": "Game 1",
-                        "sku": "1",
-                        "price": "1",
-                        "currency": "USD",
-                        "quantity": "1"
-                    },
-                    {
-                        "name": "Game 2",
-                        "sku": "2",
-                        "price": "1",
-                        "currency": "USD",
-                        "quantity": "1"
-                    },
-                    {
-                        "name": "Game 3",
-                        "sku": "3",
-                        "price": "1",
-                        "currency": "USD",
-                        "quantity": "1"
-                    }
-                ]
+                    "total": amount
+                }
             }
         ],
         'redirect_urls': {
-            "return_url": "https://woodengames.ge/order/1/success",
-            "cancel_url": "https://woodengames.ge/order/1/fail"
+            "return_url": f"https://woodengames.ge/order/{order.id}/success",
+            "cancel_url": f"https://woodengames.ge/order/{order.id}/fail"
         }
     })
+    order_response = client.execute(new_order)
+    order_links = order_response.result.links
+    return order_links[1].href
+
+
+def validate_webhook(auth_algo,
+                     cert_url,
+                     transmission_id,
+                     transmission_sig,
+                     transmission_time,
+                     webhook_id,
+                     event: dict,
+                     pp_client: PayPalHttpClient):
+    payload = {
+        "auth_algo": auth_algo,
+        "cert_url": cert_url,
+        "transmission_id": transmission_id,
+        "transmission_sig": transmission_sig,
+        "transmission_time": transmission_time,
+        "webhook_id": webhook_id,
+        "webhook_event": {**event}
+    }
+    print(payload)
+    response = pp_client.execute(WebhookVerifySignatureRequest().request_body(payload))
+    print(response)

@@ -106,6 +106,7 @@ class Book(Base):
     bonus_game_id: Mapped[Optional[int]] = mapped_column(ForeignKey(Game.id), default=None)
     delivery_address: Mapped[str]
     extra: Mapped[Optional[str]]
+    total_hours: Mapped[int] = mapped_column(server_default='0')
 
     games: Mapped[List[GameToBook]] = relationship(back_populates='book')
     bonus_game: Mapped[Game] = relationship(back_populates='as_bonus')

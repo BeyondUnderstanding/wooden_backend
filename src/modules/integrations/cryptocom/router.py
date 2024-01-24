@@ -20,16 +20,16 @@ from src.modules.integrations.telegram.module import new_order_notification
 cryptocom = APIRouter(prefix='/payments/crypto', tags=['Payments'])
 
 
-@cryptocom.post('/test', response_model=CreateOrderOK)
-def test_crypto(order_id: int, amount: float,
-                session: Session = Depends(get_db),
-                auth: JwtAuthorizationCredentials = Security(access_security)):
-    obj = crypto_create_payment(order_id, amount, 'USD', 'Test payment')
-    return CreateOrderOK(
-        order_id=order_id,
-        payment_method='cryptocom',
-        checkout_url=obj.payment_url
-    )
+# @cryptocom.post('/test', response_model=CreateOrderOK)
+# def test_crypto(order_id: int, amount: float,
+#                 session: Session = Depends(get_db),
+#                 auth: JwtAuthorizationCredentials = Security(access_security)):
+#     obj = crypto_create_payment(order_id, amount, 'USD', 'Test payment')
+#     return CreateOrderOK(
+#         order_id=order_id,
+#         payment_method='cryptocom',
+#         checkout_url=obj.payment_url
+#     )
 
 
 # I pray what nobody will try bypass payment via fake request to this endpoint

@@ -13,6 +13,7 @@ from src.modules.client.basket.utils import calculate_order, calculate_hours, ca
     new_order_sms_notification
 from src.modules.client.games.schema import GameSchema
 from src.modules.client.games.utils import populate_adapter
+from src.modules.integrations.paypal.utils import generate_order
 from src.modules.integrations.telegram.module import new_order_notification
 from src.modules.schema import CreateObjectSchema, DeletedObjectSchema
 from src.modules.schema import require_uuid, UpdateObjectSchema
@@ -171,7 +172,8 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         extra=data.extra,
         payment_method=data.payment_method,
         is_prepayment=True if data.payment_method == PaymentMethod.prepayment else False,
-        prepayment_done=False
+        prepayment_done=False,
+        total_hours=total_hours
     )
 
     session.add(book)
@@ -228,7 +230,7 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
         payment = crypto_create_payment(book.id, book.total_price, 'USD', 'WoodenGames.ge booking')
         checkout_url = payment.payment_url
     if book.payment_method == PaymentMethod.paypal:
-        checkout_url = f'https://woodengames.ge/order/{book.id}/not_implemented'
+        checkout_url = generate_order(book)
     if book.payment_method == PaymentMethod.prepayment:
         checkout_url = f'https://woodengames.ge/order/{book.id}/success'
         if not IS_DEV:
@@ -237,8 +239,6 @@ async def create_order(data: CreateBooking, session: Session = Depends(get_db), 
                      subject='Booking Invoice',
                      data=email_data)
             new_order_notification(book)
-    if book.payment_method == PaymentMethod.card:
-        checkout_url = f'https://woodengames.ge/order/{book.id}/deprecated'
 
     return CreateOrderOK(
         payment_method=book.payment_method,
