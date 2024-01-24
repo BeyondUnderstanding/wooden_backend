@@ -1,5 +1,6 @@
+import json
 from math import ceil
-from typing import List
+from typing import List, OrderedDict
 
 from paypalrestsdk.core import PayPalHttpClient
 from paypalrestsdk.v1.orders import OrdersCreateRequest
@@ -44,6 +45,7 @@ def validate_webhook(auth_algo,
                      webhook_id,
                      event: dict,
                      pp_client: PayPalHttpClient):
+    ordered_event = json.loads(str(event), object_pairs_hook=OrderedDict)
     payload = {
         "auth_algo": auth_algo,
         "cert_url": cert_url,
