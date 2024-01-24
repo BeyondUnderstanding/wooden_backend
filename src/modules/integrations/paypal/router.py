@@ -32,7 +32,6 @@ async def test_paypal(order_id: int, session: Session = Depends(get_db)):
     return link
 
 
-
 @paypal.post('/webhook')
 async def webhook(PAYPAL_AUTH_ALGO: Annotated[str, Header(convert_underscores=True)],
                   PAYPAL_CERT_URL: Annotated[str, Header(convert_underscores=True)],
@@ -46,14 +45,14 @@ async def webhook(PAYPAL_AUTH_ALGO: Annotated[str, Header(convert_underscores=Tr
 
     from src.modules.integrations.paypal.utils import validate_webhook
     validate_status = validate_webhook(PAYPAL_AUTH_ALGO,
-                     PAYPAL_CERT_URL,
-                     PAYPAL_TRANSMISSION_ID,
-                     PAYPAL_TRANSMISSION_SIG,
-                     PAYPAL_TRANSMISSION_TIME,
-                     WEBHOOK_ID,
-                     await request.json(),
-                     client
-                     )
+                                       PAYPAL_CERT_URL,
+                                       PAYPAL_TRANSMISSION_ID,
+                                       PAYPAL_TRANSMISSION_SIG,
+                                       PAYPAL_TRANSMISSION_TIME,
+                                       WEBHOOK_ID,
+                                       data,
+                                       client
+                                       )
     print(validate_status.verification_status)
     if validate_status.verification_status == 'SUCCESS':
         print('Validate - valid')
