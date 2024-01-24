@@ -45,7 +45,7 @@ def validate_webhook(auth_algo,
                      webhook_id,
                      event: dict,
                      pp_client: PayPalHttpClient):
-    ordered_event = json.loads(json.dumps(event), object_pairs_hook=OrderedDict)
+    ordered_event: OrderedDict = json.loads(json.dumps(event), object_pairs_hook=OrderedDict)
     payload = {
         "auth_algo": auth_algo,
         "cert_url": cert_url,
@@ -53,7 +53,7 @@ def validate_webhook(auth_algo,
         "transmission_sig": transmission_sig,
         "transmission_time": transmission_time,
         "webhook_id": webhook_id,
-        "webhook_event": ordered_event
+        "webhook_event": {**ordered_event}
     }
     print(payload)
     response = pp_client.execute(WebhookVerifySignatureRequest().request_body(payload))
