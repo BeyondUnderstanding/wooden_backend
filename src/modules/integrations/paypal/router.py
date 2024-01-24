@@ -54,6 +54,7 @@ async def webhook(PAYPAL_AUTH_ALGO: Annotated[str, Header(convert_underscores=Tr
                      await request.json(),
                      client
                      )
+    print(validate_status.verification_status)
     if validate_status.verification_status == 'SUCCESS':
         print('Validate - valid')
     else:
