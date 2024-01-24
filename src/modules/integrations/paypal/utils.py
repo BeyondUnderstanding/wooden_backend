@@ -53,7 +53,7 @@ def validate_webhook(auth_algo,
         "transmission_sig": transmission_sig,
         "transmission_time": transmission_time,
         "webhook_id": webhook_id,
-        "webhook_event": event
+        "webhook_event": ordered_event
     }
     print(payload)
     response = pp_client.execute(WebhookVerifySignatureRequest().request_body(payload))
