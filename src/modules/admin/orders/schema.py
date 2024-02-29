@@ -40,4 +40,7 @@ class OrderModelFull(OrderModel):
 
 class OrderSendMessage(BaseModel):
     message: str
-    
+
+
+class OrderChangeBonusSchema(BaseModel):
+    new_bonus: int

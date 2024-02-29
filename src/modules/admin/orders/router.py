@@ -12,7 +12,7 @@ from src.db.database import get_db
 from src.models import Book, GameToBook, Game
 from .grid.router import grid_router
 from src.modules.exceptions import NOT_IMPLEMENTED
-from .schema import OrderModel, OrderModelFull, OrderSendMessage
+from .schema import OrderModel, OrderModelFull, OrderSendMessage, OrderChangeBonusSchema
 from src.modules.admin.auth.router import access_security
 from src.modules.schema import UpdateObjectSchema
 from ..utils import send_sms_message
@@ -29,11 +29,11 @@ async def get_all(start: int = 0, size: int = 10, payed_only: bool = False, acti
     return session.scalars(select(Book)
                            .distinct(Book.id)
                            .where(
-                                and_(
-                                    Book.is_payed.in_([True] if payed_only else (True, False)),
-                                    datetime.datetime.utcnow() < Book.start_date if active_only else 1==1
-                                )
-                            )
+        and_(
+            Book.is_payed.in_([True] if payed_only else (True, False)),
+            datetime.datetime.utcnow() < Book.start_date if active_only else 1 == 1
+        )
+    )
                            .join(GameToBook)
                            .join(Game).limit(size).offset(start).order_by(Book.id.desc()))
 
@@ -42,7 +42,7 @@ async def get_all(start: int = 0, size: int = 10, payed_only: bool = False, acti
 async def get_one(order_id: int,
                   session: Session = Depends(get_db),
                   auth: JwtAuthorizationCredentials = Security(access_security)):
-    if order:=session.get(Book, order_id):
+    if order := session.get(Book, order_id):
         return order
     else:
         raise HTTPException(status_code=404, detail='Order not found')
@@ -89,8 +89,8 @@ async def cancel_order(order_id: int, need_refund: bool = False,
         for od in p.occupied_dates:
             session.delete(od)
     session.commit()
-    # TODO: Message customer about order cancellation
-    # new_order_sms_notification
+    send_sms_message(order.id, session,
+                     f'Order {order_id} has been canceled')
 
     return JSONResponse(content={'message': f'Order {order.id} canceled'})
 
@@ -101,9 +101,31 @@ async def send_message(order_id: int,
                        auth: JwtAuthorizationCredentials = Security(access_security),
                        session: Session = Depends(get_db)):
     if not IS_DEV:
-        is_message_sent = send_sms_message(order_id, session, f'Order {order_id} is canceled. Contact us for more info.')
+        is_message_sent = send_sms_message(order_id, session,
+                                           f'Order {order_id} is canceled. Contact us for more info.')
     else:
         is_message_sent = True
     if not is_message_sent:
         return JSONResponse(content={'message': 'Message is not sent'}, status_code=500)
     return JSONResponse(content={'message': 'Message sent'})
+
+
+@orders_router.patch('/{order_id}/change_bonus', tags=['AdminOrders'])
+async def change_bonus(order_id: int,
+                       data: OrderChangeBonusSchema,
+                       auth: JwtAuthorizationCredentials = Security(access_security),
+                       session: Session = Depends(get_db)):
+    order: Book | None = session.get(Book, order_id)
+    new_bonus: Game | None = session.get(Game, data.new_bonus)
+
+    if order is None:
+        return JSONResponse(content={'message': 'Order not found'}, status_code=404)
+    if new_bonus is None:
+        return JSONResponse(content={'message': 'Game not found'}, status_code=404)
+
+    order.bonus_game_id = new_bonus.id
+    session.add(order)
+    session.commit()
+    return JSONResponse(content={'message': 'Order bonus updated'}, status_code=200)
+
+
